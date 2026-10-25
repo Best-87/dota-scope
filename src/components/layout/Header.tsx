@@ -37,7 +37,7 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
         {/* Brand / Logo */}
         <Link
-          to={accountId ? `/dashboard/${accountId}` : '/dashboard/1242630127'}
+          to={accountId ? `/dashboard/${accountId}` : '/search'}
           className="flex items-center gap-2.5 group flex-shrink-0"
         >
           <img

@@ -28,23 +28,37 @@ export interface PlayerProviderProps {
   initialAccountId?: number;
 }
 
-export const DEFAULT_ACCOUNT_ID = 1242630127;
+const STORAGE_KEY = 'dotascope_account_id';
 
 export const PlayerProvider: React.FC<PlayerProviderProps> = ({
   children,
   initialAccountId,
 }) => {
-  const [accountId, setAccountIdState] = useState<number | null>(
-    initialAccountId !== undefined && initialAccountId !== null
-      ? initialAccountId
-      : DEFAULT_ACCOUNT_ID
-  );
+  const [accountId, setAccountIdState] = useState<number | null>(() => {
+    if (initialAccountId !== undefined && initialAccountId !== null) {
+      return initialAccountId;
+    }
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved && !isNaN(Number(saved))) {
+        return Number(saved);
+      }
+    } catch {
+      // Ignore storage errors
+    }
+    return null;
+  });
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
   const setAccountId = useCallback((id: number) => {
     setAccountIdState(id);
+    try {
+      localStorage.setItem(STORAGE_KEY, String(id));
+    } catch {
+      // Ignore storage errors
+    }
   }, []);
 
   const refetchPlayer = useCallback(async () => {

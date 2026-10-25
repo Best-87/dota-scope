@@ -8,13 +8,22 @@ import AnalysisPage from './pages/AnalysisPage';
 import MatchPage from './pages/MatchPage';
 import LegendPage from './pages/LegendPage';
 import GuidesPage from './pages/GuidesPage';
+import { usePlayerContext } from './context/PlayerContext';
+
+const RootRedirect: React.FC = () => {
+  const { accountId } = usePlayerContext();
+  if (accountId) {
+    return <Navigate to={`/dashboard/${accountId}`} replace />;
+  }
+  return <Navigate to="/search" replace />;
+};
 
 export const App: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        {/* Default route to user's dashboard */}
-        <Route index element={<Navigate to="/dashboard/1242630127" replace />} />
+        {/* Default route: dashboard if user selected, otherwise search */}
+        <Route index element={<RootRedirect />} />
 
         {/* Search Page */}
         <Route path="search" element={<SearchPage />} />
