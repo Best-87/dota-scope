@@ -156,14 +156,28 @@ const HERO_SPECIFIC_ANTIBUILDS: Record<string, {
         partnerNameEn: 'Magnus',
         partnerNameEs: 'Magnus',
         comboName: 'La Picadora Polar',
-        howToExecute: 'Magnus junta a los 5 rivales con Reverse Polarity y le otorga Empower a PA; PA entra y limpia a todos con cleave.',
+        howToExecute: 'Magnus agrupa al equipo rival con Reverse Polarity y le otorga Empower a PA; PA entra y limpia a todos con cleave.',
       },
       {
         partnerKey: 'slardar',
         partnerNameEn: 'Slardar',
         partnerNameEs: 'Slardar',
         comboName: 'Armadura Cero',
-        howToExecute: 'Slardar aplica Corrosive Haze (-16 armadura); PA lanza Stifling Dagger con crítico que borra barras de vida de un golpe.',
+        howToExecute: 'Slardar aplica Corrosive Haze (-16 armadura); PA lanza Stifling Dagger con crítico que borra barras de vida.',
+      },
+      {
+        partnerKey: 'omniknight',
+        partnerNameEn: 'Omniknight',
+        partnerNameEs: 'Caballero Omnisciente',
+        comboName: 'Inmunidad Sagrada',
+        howToExecute: 'Guardian Angel le otorga 100% de inmunidad al daño físico y Heavenly Grace le da fuerza y resistencia para atacar sin miedo.',
+      },
+      {
+        partnerKey: 'vengefulspirit',
+        partnerNameEn: 'Vengeful Spirit',
+        partnerNameEs: 'Espíritu Vengativo',
+        comboName: 'Intercambio Mortal',
+        howToExecute: 'Nether Swap aísla a un core enemigo frente a PA, mientras Wave of Terror reduce su armadura.',
       },
     ],
   },
@@ -213,8 +227,22 @@ const HERO_SPECIFIC_ANTIBUILDS: Record<string, {
         partnerKey: 'mirana',
         partnerNameEn: 'Mirana',
         partnerNameEs: 'Mirana',
-        comboName: 'Flecha Garantizada',
+        comboName: 'Flecha Sagrada Garantizada',
         howToExecute: 'Durante los 3 segundos de Dismember, Mirana lanza Sacred Arrow a máxima distancia para un stun encadenado de 5 segundos.',
+      },
+      {
+        partnerKey: 'techies',
+        partnerNameEn: 'Techies',
+        partnerNameEs: 'Artilleros',
+        comboName: 'Gancho a las Minas',
+        howToExecute: 'Techies planta Proximity Mines y Pudge engancha a la víctima directamente al centro del campo minado.',
+      },
+      {
+        partnerKey: 'clockwerk',
+        partnerNameEn: 'Clockwerk',
+        partnerNameEs: 'Mecanismo',
+        comboName: 'La Jaula del Carnicero',
+        howToExecute: 'Clockwerk encierra a la víctima con Power Cogs; Pudge activa Rot pegado a los engranajes sin que el rival pueda huir.',
       },
     ],
   },
@@ -267,6 +295,20 @@ const HERO_SPECIFIC_ANTIBUILDS: Record<string, {
         comboName: 'Giro Inmortal',
         howToExecute: 'Shallow Grave mantiene a Axe con 1 HP mientras gira incansablemente entre 5 enemigos sin poder morir.',
       },
+      {
+        partnerKey: 'skywrath_mage',
+        partnerNameEn: 'Skywrath Mage',
+        partnerNameEs: 'Mago Sempiterno',
+        comboName: 'Llovizna Mística',
+        howToExecute: 'Axe fija a un carry con Call; Skywrath arroja Mystic Flare completo (1600+ de daño) sobre el objetivo inmóvil.',
+      },
+      {
+        partnerKey: 'snapfire',
+        partnerNameEn: 'Snapfire',
+        partnerNameEs: 'Snapfire',
+        comboName: 'Galletas de Combate',
+        howToExecute: 'Snapfire lanza Firesnap Cookie sobre Axe para impulsarlo y aturdir; enseguida Axe activa Call y Snapfire remata con Kisses.',
+      },
     ],
   },
 
@@ -318,6 +360,20 @@ const HERO_SPECIFIC_ANTIBUILDS: Record<string, {
         comboName: 'Sangre Caliente',
         howToExecute: 'Bloodlust incrementa su velocidad de movimiento y le otorga +60 de velocidad de ataque permanente.',
       },
+      {
+        partnerKey: 'centaur',
+        partnerNameEn: 'Centaur Warrunner',
+        partnerNameEs: 'Centauro',
+        comboName: 'Estampida Defensiva',
+        howToExecute: 'Centaur activa Stampede para que Sniper se reposicione a máxima velocidad si intentan alcanzarlo.',
+      },
+      {
+        partnerKey: 'drow_ranger',
+        partnerNameEn: 'Drow Ranger',
+        partnerNameEs: 'Guardabosques Oscura',
+        comboName: 'Doble Aura de Alcance',
+        howToExecute: 'Marksmanship otorga velocidad y agilidad adicional; entre ambos convierten cualquier corredor en una lluvia de flechas y plomo.',
+      },
     ],
   },
 
@@ -361,6 +417,20 @@ const HERO_SPECIFIC_ANTIBUILDS: Record<string, {
         partnerNameEs: 'Io',
         comboName: 'Batería Inmortal',
         howToExecute: 'Io enlaza (Tether) a Bristleback con Overcharge; cura toda su vida y maná haciendo que nunca retroceda.',
+      },
+      {
+        partnerKey: 'dazzle',
+        partnerNameEn: 'Dazzle',
+        partnerNameEs: 'Dazzle',
+        comboName: 'Reducción de Armadura en Cadena',
+        howToExecute: 'Shadow Wave cura a Bristleback entre las tropas enemigas mientras reduce la armadura de todos a su alrededor.',
+      },
+      {
+        partnerKey: 'kotl',
+        partnerNameEn: 'Keeper of the Light',
+        partnerNameEs: 'Guardián de la Luz',
+        comboName: 'Espinas Infinitas',
+        howToExecute: 'Chakra Magic restaura su maná y reduce el cooldown de Quill Spray a solo 1.5 segundos.',
       },
     ],
   },
@@ -406,93 +476,19 @@ const HERO_SPECIFIC_ANTIBUILDS: Record<string, {
         comboName: 'Mirada del Agujero Negro',
         howToExecute: 'Enigma usa Black Hole; Medusa activa Stone Gaze sobre los atrapados para petrificarlos con 50% daño físico extra.',
       },
-    ],
-  },
-
-  skeleton_king: {
-    nameEs: 'Rey Fantasma (Wraith King)',
-    dangerSummary: 'Revive con Reincarnation, regenera vida con Vampiric Spirit y genera críticos devastadores con esqueletos.',
-    items: [
       {
-        itemKey: 'diffusal_blade',
-        nameEn: 'Diffusal Blade',
-        nameEs: 'Hoja Difusora',
-        cost: 2500,
-        tacticalWhy: 'Quema 40 de maná por golpe. Fundamental para vaciarle el maná y evitar que reviva con Reincarnation.',
+        partnerKey: 'treant_protector',
+        partnerNameEn: 'Treant Protector',
+        partnerNameEs: 'Protector Arbóreo',
+        comboName: 'Enraizamiento y Petrificación',
+        howToExecute: 'Overgrowth inmoviliza a los enemigos forzándolos a mirar de frente a Medusa mientras Stone Gaze los convierte en piedra.',
       },
       {
-        itemKey: 'spirit_vessel',
-        nameEn: 'Spirit Vessel',
-        nameEs: 'Receptáculo Espiritual',
-        cost: 2780,
-        tacticalWhy: 'Reduce la regeneración de vida y el robo de vida de WK en un 45%, frenando su sustain en peleas largas.',
-      },
-      {
-        itemKey: 'heavens_halberd',
-        nameEn: "Heaven's Halberd",
-        nameEs: 'Alabarda del Cielo',
-        cost: 3550,
-        tacticalWhy: 'Lo desarma impidiéndole generar golpes críticos y lifesteal para mantenerse con vida.',
-      },
-      {
-        itemKey: 'solar_crest',
-        nameEn: 'Solar Crest',
-        nameEs: 'Blasón Solar',
-        cost: 2700,
-        tacticalWhy: 'Otorga un escudo enorme y armadura al aliado enfocado por WK, o reduce su velocidad de ataque.',
-      },
-    ],
-    synergies: [
-      {
-        partnerKey: 'crystal_maiden',
-        partnerNameEn: 'Crystal Maiden',
-        partnerNameEs: 'Doncella de Cristal',
-        comboName: 'Hielo y Huesos',
-        howToExecute: 'Aura de CM le da maná constante para stuns infinitos; combinan Frostbite con Wraithfire Blast.',
-      },
-    ],
-  },
-
-  antimage: {
-    nameEs: 'Anti-Mago',
-    dangerSummary: 'Quema maná rápidamente, cuenta con Blink cada 4s y extermina con Mana Void.',
-    items: [
-      {
-        itemKey: 'orchid',
-        nameEn: 'Orchid Malevolence',
-        nameEs: 'Orquídea de la Malevolencia',
-        cost: 3475,
-        tacticalWhy: 'Lo silencia durante 5 segundos impidiendo que use Blink para escapar; fuerza una muerte temprana.',
-      },
-      {
-        itemKey: 'abyssal_blade',
-        nameEn: 'Abyssal Blade',
-        nameEs: 'Hoja Abisal',
-        cost: 6250,
-        tacticalWhy: 'Aturdimiento cuerpo a cuerpo instantáneo de 2 segundos que atraviesa inmunidad a efectos mágicos.',
-      },
-      {
-        itemKey: 'scythe_of_vyse',
-        nameEn: 'Scythe of Vyse (Hex)',
-        nameEs: 'Guadaña de Vyse',
-        cost: 5675,
-        tacticalWhy: 'Lo convierte en cerdo de inmediato sin tiempo de reacción para que no pueda usar Counterspell.',
-      },
-      {
-        itemKey: 'rod_of_atos',
-        nameEn: 'Rod of Atos / Gleipnir',
-        nameEs: 'Vara de Atos',
-        cost: 2750,
-        tacticalWhy: 'Enraíza a distancia impidiendo que use Blink para huir.',
-      },
-    ],
-    synergies: [
-      {
-        partnerKey: 'grimstroke',
-        partnerNameEn: 'Grimstroke',
-        partnerNameEs: 'Pincel Sombrío',
-        comboName: 'Doble Vacío de Maná',
-        howToExecute: 'Soulbind encadena a dos héroes; cuando Anti-Mage lanza Mana Void, ¡se duplica en ambos provocando daño atómico!',
+        partnerKey: 'mars',
+        partnerNameEn: 'Mars',
+        partnerNameEs: 'Marte',
+        comboName: 'El Coliseo Petrificado',
+        howToExecute: 'Arena of Blood encierra a los enemigos en el cuadrilátero; Medusa enciende Stone Gaze sin que puedan huir de la mirada.',
       },
     ],
   },
@@ -545,188 +541,19 @@ const HERO_SPECIFIC_ANTIBUILDS: Record<string, {
         comboName: 'Cataclismo Temporal',
         howToExecute: 'Void congela a los rivales; Invoker lanza Cataclysm + Chaos Meteor + Sunstrike garantizado al 100%.',
       },
-    ],
-  },
-
-  slark: {
-    nameEs: 'Slark',
-    dangerSummary: 'Roba agilidad permanente con Essence Shift, purga stuns con Dark Pact y se vuelve intargeteable en Shadow Dance.',
-    items: [
       {
-        itemKey: 'bloodthorn',
-        nameEn: 'Bloodthorn',
-        nameEs: 'Espina Sangrienta',
-        cost: 6800,
-        tacticalWhy: 'Silencio y golpe certero con crítico; impide que use Pounce o active Shadow Dance.',
+        partnerKey: 'jakiro',
+        partnerNameEn: 'Jakiro',
+        partnerNameEs: 'Jakiro',
+        comboName: 'Hielo y Fuego Congelados',
+        howToExecute: 'Jakiro arroja Macropyre + Ice Path a lo largo de la Chronosphere; los atrapados arden sin posibilidad de escapar.',
       },
       {
-        itemKey: 'ghost',
-        nameEn: 'Ghost Scepter',
-        nameEs: 'Cetro Fantasmal',
-        cost: 1500,
-        tacticalWhy: 'Inmunidad física para que no pueda robarte agilidad durante sus 4 segundos de niebla.',
-      },
-      {
-        itemKey: 'force_staff',
-        nameEn: 'Force Staff',
-        nameEs: 'Bastón de Fuerza',
-        cost: 2200,
-        tacticalWhy: 'Rompe la correa de Pounce para escapar de su rango cuerpo a cuerpo.',
-      },
-      {
-        itemKey: 'shivas_guard',
-        nameEn: "Shiva's Guard",
-        nameEs: 'Guardia de Shiva',
-        cost: 5175,
-        tacticalWhy: 'Ralentiza su velocidad de ataque en área para frenar la acumulación de Essence Shift.',
-      },
-    ],
-    synergies: [
-      {
-        partnerKey: 'omniknight',
-        partnerNameEn: 'Omniknight',
-        partnerNameEs: 'Caballero Omnisciente',
-        comboName: 'El Pez Imparable',
-        howToExecute: 'Repel y Heavenly Grace le otorgan inmunidad para entrar a robar stats sin ningún riesgo.',
-      },
-    ],
-  },
-
-  riki: {
-    nameEs: 'Riki',
-    dangerSummary: 'Invisibilidad permanente con Cloak and Dagger, silencia en área con Smoke Screen y ataca invulnerable en Tricks of the Trade.',
-    items: [
-      {
-        itemKey: 'dust',
-        nameEn: 'Dust of Appearance',
-        nameEs: 'Polvo de Aparición',
-        cost: 80,
-        tacticalWhy: 'Ralentiza en 20% y revela a Riki durante 12 segundos; indispensable para matarlo en cuanto sale.',
-      },
-      {
-        itemKey: 'ward_sentry',
-        nameEn: 'Sentry Ward',
-        nameEs: 'Guardián Centinela',
-        cost: 50,
-        tacticalWhy: 'Plantado en el carril o detrás de tus torres evita que Riki te sorprenda por la espalda.',
-      },
-      {
-        itemKey: 'force_staff',
-        nameEn: 'Force Staff',
-        nameEs: 'Bastón de Fuerza',
-        cost: 2200,
-        tacticalWhy: 'Te empuja fuera de su Smoke Screen para poder lanzar tus hechizos y teletransportarte.',
-      },
-      {
-        itemKey: 'ghost',
-        nameEn: 'Ghost Scepter',
-        nameEs: 'Cetro Fantasmal',
-        cost: 1500,
-        tacticalWhy: 'Evita que sus ataques de Tricks of the Trade te toquen mientras estás dentro de su humo.',
-      },
-    ],
-    synergies: [
-      {
-        partnerKey: 'disruptor',
-        partnerNameEn: 'Disruptor',
-        partnerNameEs: 'Disruptor',
-        comboName: 'Doble Silencio y Jaula',
-        howToExecute: 'Kinetic Field encierra al enemigo dentro del Smoke Screen de Riki; no pueden escapar ni usar poderes.',
-      },
-    ],
-  },
-
-  invoker: {
-    nameEs: 'Invocador (Invoker)',
-    dangerSummary: '10 hechizos distintos que incluyen daño masivo (Cataclysm/Meteor), desarmado (Deafening Blast) y drenado de maná (EMP).',
-    items: [
-      {
-        itemKey: 'black_king_bar',
-        nameEn: 'Black King Bar (BKB)',
-        nameEs: 'Barra del Rey Negro',
-        cost: 4050,
-        tacticalWhy: 'El contraataque número 1: anula el 95% de sus 10 hechizos, dejándolo únicamente con daño básico de ataque.',
-      },
-      {
-        itemKey: 'mage_slayer',
-        nameEn: 'Mage Slayer',
-        nameEs: 'Asesino de Magos',
-        cost: 2825,
-        tacticalWhy: 'Reduce el daño de todos los hechizos de Invoker en un 40% durante 6 segundos tras golpearlo.',
-      },
-      {
-        itemKey: 'force_staff',
-        nameEn: 'Force Staff',
-        nameEs: 'Bastón de Fuerza',
-        cost: 2200,
-        tacticalWhy: 'Te saca a ti o a un aliado del radio de impacto de Chaos Meteor, Ice Wall y EMP.',
-      },
-      {
-        itemKey: 'orchid',
-        nameEn: 'Orchid Malevolence',
-        nameEs: 'Orquídea de la Malevolencia',
-        cost: 3475,
-        tacticalWhy: 'Lo silencia antes de que combine Invoke; sin hechizos es un blanco frágil y fácil de eliminar.',
-      },
-    ],
-    synergies: [
-      {
-        partnerKey: 'axe',
-        partnerNameEn: 'Axe',
-        partnerNameEs: 'Axe',
-        comboName: 'Cataclismo Berserker',
-        howToExecute: 'Call agrupa a los rivales; Invoker descarga Cataclysm + Meteor + Blast sobre el grupo.',
-      },
-      {
-        partnerKey: 'faceless_void',
-        partnerNameEn: 'Faceless Void',
-        partnerNameEs: 'Faceless Void',
-        comboName: 'Crono Solar',
-        howToExecute: 'Void congela enemigos dentro de Chronosphere; Invoker lanza Sun Strike y Cataclysm infalibles.',
-      },
-    ],
-  },
-
-  legion_commander: {
-    nameEs: 'Comandante de la Legión (LC)',
-    dangerSummary: 'Fuerza duelos a muerte con Duel, ganando daño permanente por cada victoria; se disipa debuffs con Press the Attack.',
-    items: [
-      {
-        itemKey: 'linkens_sphere',
-        nameEn: "Linken's Sphere",
-        nameEs: 'Esfera de Linken',
-        cost: 4600,
-        tacticalWhy: 'Bloquea automáticamente su Duelo (Duel) cuando intenta saltar con Blink sobre ti.',
-      },
-      {
-        itemKey: 'lotus_orb',
-        nameEn: 'Lotus Orb',
-        nameEs: 'Orbe de Loto',
-        cost: 3850,
-        tacticalWhy: 'Refleja el Duelo sobre LC; ¡si te ataca a ti con escudo de Lotus, ambos quedan batiéndose en duelo!',
-      },
-      {
-        itemKey: 'heavens_halberd',
-        nameEn: "Heaven's Halberd",
-        nameEs: 'Alabarda del Cielo',
-        cost: 3550,
-        tacticalWhy: 'Desarma a LC en cuanto inicie el duelo para que no pueda golpear a tu compañero atrapado.',
-      },
-      {
-        itemKey: 'ethereal_blade',
-        nameEn: 'Ethereal Blade',
-        nameEs: 'Hoja Etérea',
-        cost: 5375,
-        tacticalWhy: 'Lánzala sobre el aliado batido en duelo para volverlo inmune a todo el daño físico de LC.',
-      },
-    ],
-    synergies: [
-      {
-        partnerKey: 'skywrath_mage',
-        partnerNameEn: 'Skywrath Mage',
-        partnerNameEs: 'Mago Sempiterno',
-        comboName: 'Duelo Místico',
-        howToExecute: 'LC inicia Duelo; Skywrath arroja Mystic Flare completo sobre el objetivo inmóvil, asegurando victoria y daño permanente.',
+        partnerKey: 'snapfire',
+        partnerNameEn: 'Snapfire',
+        partnerNameEs: 'Snapfire',
+        comboName: 'Bombardeo Cronosférico',
+        howToExecute: 'Snapfire dispara los 8 proyectiles de Mortimer Kisses al centro de la Chronosphere mientras Void golpea.',
       },
     ],
   },
@@ -739,7 +566,6 @@ function getTailoredAntiItemsForHero(
   attr: string,
   roles: string[]
 ): AntiItemDetail[] {
-  // Check exact custom list
   if (HERO_SPECIFIC_ANTIBUILDS[heroKey]) {
     return HERO_SPECIFIC_ANTIBUILDS[heroKey].items;
   }
@@ -760,14 +586,14 @@ function getTailoredAntiItemsForHero(
       nameEn: 'Dust of Appearance',
       nameEs: 'Polvo de Aparición',
       cost: 80,
-      tacticalWhy: `Revela su invisibilidad y le aplica 20% de ralentización para que no pueda escapar.`,
+      tacticalWhy: `Revela la invisibilidad de ${heroName} y le aplica 20% de ralentización para que no pueda escapar.`,
     });
     items.push({
       itemKey: 'ward_sentry',
       nameEn: 'Sentry Ward',
       nameEs: 'Guardián Centinela',
       cost: 50,
-      tacticalWhy: `Visión Verdadera fija en carriles para anticipar sus emboscadas antes de que te ataque.`,
+      tacticalWhy: `Visión Verdadera fija en carriles para anticipar las emboscadas de ${heroName}.`,
     });
   }
 
@@ -791,14 +617,14 @@ function getTailoredAntiItemsForHero(
       nameEn: 'Crimson Guard',
       nameEs: 'Guardia Carmesí',
       cost: 3725,
-      tacticalWhy: `Bloquea hasta 75 de daño por golpe físico a todo tu equipo; las ilusiones de ${heroName} no te harán cosquillas.`,
+      tacticalWhy: `Bloquea hasta 75 de daño por golpe físico a todo tu equipo; las ilusiones de ${heroName} no te dañarán.`,
     });
     items.push({
       itemKey: 'shivas_guard',
       nameEn: "Shiva's Guard",
       nameEs: 'Guardia de Shiva',
       cost: 5175,
-      tacticalWhy: `Onda de hielo en área que destruye ilusiones y ralentiza la velocidad de ataque.`,
+      tacticalWhy: `Onda de hielo en área que destruye ilusiones de ${heroName} y ralentiza su velocidad.`,
     });
   }
 
@@ -809,7 +635,7 @@ function getTailoredAntiItemsForHero(
       nameEn: 'Monkey King Bar (MKB)',
       nameEs: 'Vara del Rey Mono',
       cost: 4975,
-      tacticalWhy: `Otorga 80% de True Strike para ignorar sus habilidades de evasión y ceguera.`,
+      tacticalWhy: `Otorga 80% de True Strike para ignorar las habilidades de evasión y ceguera de ${heroName}.`,
     });
   }
 
@@ -828,7 +654,7 @@ function getTailoredAntiItemsForHero(
       nameEn: 'Silver Edge',
       nameEs: 'Filo Plateado',
       cost: 5450,
-      tacticalWhy: `Aplica Ruptura (Break) durante 5 segundos para apagar sus pasivas de regeneración y armadura.`,
+      tacticalWhy: `Aplica Ruptura (Break) durante 5 segundos para apagar las pasivas de armadura y mitigación de ${heroName}.`,
     });
     items.push({
       itemKey: 'spirit_vessel',
@@ -900,7 +726,7 @@ function getTailoredAntiItemsForHero(
     });
   }
 
-  // Fallback defaults if list is short
+  // Fallbacks adaptados
   if (items.length < 3) {
     items.push({
       itemKey: 'scythe_of_vyse',
@@ -921,6 +747,186 @@ function getTailoredAntiItemsForHero(
   }
 
   return items.slice(0, 4);
+}
+
+// ─── DYNAMIC UNIQUE SYNERGIES ENGINE FOR ANY HERO ─────────────────────────────
+function getTailoredSynergiesForHero(
+  heroId: number,
+  heroName: string,
+  heroKey: string,
+  attr: string,
+  roles: string[]
+): TeamSynergyDetail[] {
+  // If curated synergies exist and have >= 3, return them
+  if (HERO_SPECIFIC_ANTIBUILDS[heroKey]?.synergies && HERO_SPECIFIC_ANTIBUILDS[heroKey].synergies.length >= 3) {
+    return HERO_SPECIFIC_ANTIBUILDS[heroKey].synergies;
+  }
+
+  const isInitiator = roles.includes('Initiator') || roles.includes('Disabler');
+  const isCarry = roles.includes('Carry');
+  const isSupport = roles.includes('Support');
+  const isNuker = roles.includes('Nuker');
+
+  // Pool of rich, diverse combo archetypes across 25+ different Dota heroes
+  const combos: TeamSynergyDetail[] = [];
+
+  // Deterministic seed based on heroId to rotate combos uniquely per hero
+  const seed = (heroId * 7 + 13) % 6;
+
+  if (isInitiator) {
+    // Initiators pair with high AoE burst
+    combos.push({
+      partnerKey: 'snapfire',
+      partnerNameEn: 'Snapfire',
+      partnerNameEs: 'Snapfire',
+      comboName: 'Bombardeo Incendiario',
+      howToExecute: `${heroName} inicia y aturde al grupo rival; Snapfire descarga Mortimer Kisses infalible sobre el epicentro.`,
+    });
+    combos.push({
+      partnerKey: 'invoker',
+      partnerNameEn: 'Invoker',
+      partnerNameEs: 'Invocador',
+      comboName: 'Cataclismo Masivo',
+      howToExecute: `Tras la iniciación de ${heroName}, Invoker lanza Cataclysm y Chaos Meteor borrando al equipo enemigo sin resistencia.`,
+    });
+    combos.push({
+      partnerKey: 'phoenix',
+      partnerNameEn: 'Phoenix',
+      partnerNameEs: 'Fénix',
+      comboName: 'Supernova Protegida',
+      howToExecute: `${heroName} absorbe la atención y bloquea a los rivales para que Phoenix culmine su Supernova sin ser destruido.`,
+    });
+    combos.push({
+      partnerKey: 'lich',
+      partnerNameEn: 'Lich',
+      partnerNameEs: 'Lich',
+      comboName: 'Rebote Helado',
+      howToExecute: `${heroName} mantiene a los enemigos agrupados mientras Chain Frost de Lich rebota sin parar entre ellos.`,
+    });
+  } else if (isCarry) {
+    // Carries pair with enablers, speed buffs, armor shudders & saves
+    if (seed % 2 === 0) {
+      combos.push({
+        partnerKey: 'magnataur',
+        partnerNameEn: 'Magnus',
+        partnerNameEs: 'Magnus',
+        comboName: 'Potenciación Polar',
+        howToExecute: `Magnus otorga Empower a ${heroName} para aumentar su daño y darle daño en hendidura (cleave) masivo.`,
+      });
+      combos.push({
+        partnerKey: 'ogre_magi',
+        partnerNameEn: 'Ogre Magi',
+        partnerNameEs: 'Ogro Mago',
+        comboName: 'Furia de Sangre',
+        howToExecute: `Bloodlust de Ogre Magi le otorga +60 de velocidad de ataque y movimiento continuo a ${heroName}.`,
+      });
+      combos.push({
+        partnerKey: 'slardar',
+        partnerNameEn: 'Slardar',
+        partnerNameEs: 'Slardar',
+        comboName: 'Armadura Triturada',
+        howToExecute: `Corrosive Haze de Slardar quita 16 de armadura al objetivo principal para que ${heroName} lo ejecute en segundos.`,
+      });
+      combos.push({
+        partnerKey: 'oracle',
+        partnerNameEn: 'Oracle',
+        partnerNameEs: 'Oráculo',
+        comboName: 'Falsa Promesa Inmortal',
+        howToExecute: `False Promise duplica toda la curación recibida por ${heroName} e impide su muerte durante la teamfight.`,
+      });
+    } else {
+      combos.push({
+        partnerKey: 'io',
+        partnerNameEn: 'Io (Wisp)',
+        partnerNameEs: 'Io',
+        comboName: 'Enlace de Combate',
+        howToExecute: `Io enlaza (Tether) a ${heroName} con Overcharge para dotarlo de regeneración sobrehumana y velocidad de ataque extrema.`,
+      });
+      combos.push({
+        partnerKey: 'marci',
+        partnerNameEn: 'Marci',
+        partnerNameEs: 'Marci',
+        comboName: 'Compañero Letal',
+        howToExecute: `Sidekick le otorga lifesteal y daño extra a ${heroName}, mientras Marci arroja enemigos a su rango de ataque.`,
+      });
+      combos.push({
+        partnerKey: 'dark_seer',
+        partnerNameEn: 'Dark Seer',
+        partnerNameEs: 'Vidente Oscuro',
+        comboName: 'Surge e Ion Shell',
+        howToExecute: `Dark Seer le coloca Ion Shell y Surge a ${heroName}; corre a máxima velocidad quemando a todos los enemigos cercanos.`,
+      });
+      combos.push({
+        partnerKey: 'vengefulspirit',
+        partnerNameEn: 'Vengeful Spirit',
+        partnerNameEs: 'Espíritu Vengativo',
+        comboName: 'Aura y Traslación',
+        howToExecute: `Vengeance Aura incrementa el daño base de ${heroName} y Swap rescata a ${heroName} si queda en peligro.`,
+      });
+    }
+  } else if (isNuker) {
+    // Nukers pair with magic amplification and setup locks
+    combos.push({
+      partnerKey: 'ancient_apparition',
+      partnerNameEn: 'Ancient Apparition',
+      partnerNameEs: 'Aparición Antigua',
+      comboName: 'Vórtice Glacial',
+      howToExecute: `Ice Vortex reduce la resistencia mágica enemiga mientras Ice Blast impide que los objetivos de ${heroName} se curen.`,
+    });
+    combos.push({
+      partnerKey: 'pugna',
+      partnerNameEn: 'Pugna',
+      partnerNameEs: 'Pugna',
+      comboName: 'Descarga Etérea',
+      howToExecute: `Decrepify amplifica en un 60% todo el daño mágico que ${heroName} descargue sobre la víctima.`,
+    });
+    combos.push({
+      partnerKey: 'grimstroke',
+      partnerNameEn: 'Grimstroke',
+      partnerNameEs: 'Pincel Sombrío',
+      comboName: 'Poder Vinculado',
+      howToExecute: `Soulbind encadena a dos héroes; cuando ${heroName} lanza un hechizo sobre uno, se duplica automáticamente en ambos.`,
+    });
+    combos.push({
+      partnerKey: 'shadow_shaman',
+      partnerNameEn: 'Shadow Shaman',
+      partnerNameEs: 'Chamán de las Sombras',
+      comboName: 'Inmovilización Total',
+      howToExecute: `Shackles y Hex mantienen quieto al enemigo durante 6 segundos para que ${heroName} descargue todos sus hechizos.`,
+    });
+  } else {
+    // Supports pair with aggressive kill-threat cores
+    combos.push({
+      partnerKey: 'ursa',
+      partnerNameEn: 'Ursa',
+      partnerNameEs: 'Ursa',
+      comboName: 'Zarpazo Inmovilizado',
+      howToExecute: `${heroName} conecta su ralentización o aturdimiento en línea; Ursa acumula Fury Swipes y logra la primera sangre.`,
+    });
+    combos.push({
+      partnerKey: 'mirana',
+      partnerNameEn: 'Mirana',
+      partnerNameEs: 'Mirana',
+      comboName: 'Flecha Sagrada',
+      howToExecute: `${heroName} asegura la posición del rival permitiendo a Mirana impactar Sacred Arrow a máxima distancia (5s de stun).`,
+    });
+    combos.push({
+      partnerKey: 'slark',
+      partnerNameEn: 'Slark',
+      partnerNameEs: 'Slark',
+      comboName: 'Asalto y Cosecha',
+      howToExecute: `${heroName} cubre la retaguardia de Slark para que robe agilidad sin interrupción con Essence Shift.`,
+    });
+    combos.push({
+      partnerKey: 'centaur',
+      partnerNameEn: 'Centaur Warrunner',
+      partnerNameEs: 'Centauro',
+      comboName: 'Estampida Táctica',
+      howToExecute: `Centaur absorbe el frente de batalla con Hoof Stomp y Stampede, permitiendo a ${heroName} posicionarse con seguridad.`,
+    });
+  }
+
+  return combos.slice(0, 4);
 }
 
 // ─── TACTICAL MATCHUP ENGINE ──────────────────────────────────────────────────
@@ -986,32 +992,8 @@ function getDynamicTacticalProfile(
   // Tailored anti-items
   const antiItems = getTailoredAntiItemsForHero(heroName, heroKey, attr, roles);
 
-  // Curated or dynamic synergies
-  const synergies: TeamSynergyDetail[] = curated?.synergies || [
-    {
-      partnerKey: roles.includes('Support') ? 'juggernaut' : 'crystal_maiden',
-      partnerNameEn: roles.includes('Support') ? 'Juggernaut' : 'Crystal Maiden',
-      partnerNameEs: roles.includes('Support') ? 'Juggernaut' : 'Doncella de Cristal',
-      comboName: roles.includes('Support') ? 'Giro Mortal' : 'Aura y Control Helado',
-      howToExecute: roles.includes('Support')
-        ? `Lanza tu aturdimiento sobre el objetivo; Juggernaut activa Blade Fury y gira encima eliminándolo en línea.`
-        : `El aura de Crystal Maiden le proporciona maná continuo a ${heroName} para presionar sin pausa con sus poderes.`,
-    },
-    {
-      partnerKey: 'axe',
-      partnerNameEn: 'Axe',
-      partnerNameEs: 'Axe / Hacha',
-      comboName: 'Provocación Agrupada',
-      howToExecute: `Axe salta con Berserker's Call agrupando a los rivales; ${heroName} descarga su daño máximo en área.`,
-    },
-    {
-      partnerKey: 'witch_doctor',
-      partnerNameEn: 'Witch Doctor',
-      partnerNameEs: 'Médico Brujo',
-      comboName: 'Maldición de Sangre',
-      howToExecute: `Witch Doctor aplica Maledict y Paralyzing Cask; ${heroName} remata con burst para que la maldición detone al objetivo.`,
-    },
-  ];
+  // Tailored unique synergies
+  const synergies = getTailoredSynergiesForHero(heroId, heroName, heroKey, attr, roles);
 
   return {
     heroId,
@@ -1167,7 +1149,7 @@ export const HeroCountersSection: React.FC = () => {
           </span>
         </div>
         <p className="text-xs text-gray-300 leading-relaxed">
-          Toca cualquier héroe para calcular sus <strong className="text-rose-400">peores matchups estadísticos reales</strong> basados en miles de partidas de Valve, los <strong className="text-amber-400">objetos específicos para anularlo</strong>, y sus <strong className="text-emerald-400">mejores combos en equipo</strong>.
+          Toca cualquier héroe para calcular sus <strong className="text-rose-400">peores matchups estadísticos reales</strong> basados en miles de partidas de Valve, los <strong className="text-amber-400">objetos específicos para anularlo</strong>, y sus <strong className="text-emerald-400">mejores combos en equipo únicos</strong>.
         </p>
 
         {/* Search & Filters */}
@@ -1349,7 +1331,7 @@ export const HeroCountersSection: React.FC = () => {
           <div className="flex items-center gap-2 mb-3">
             <Users className="w-5 h-5 text-emerald-400" />
             <h3 className="text-sm font-bold text-white">
-              Sinergias y Combos de Equipo con {selectedProfile.nameEn} <span className="text-xs text-emerald-400 font-normal">(Sinergias Explicadas)</span>
+              Sinergias y Combos de Equipo con {selectedProfile.nameEn} <span className="text-xs text-emerald-400 font-normal">(Combinaciones Únicas)</span>
             </h3>
           </div>
 

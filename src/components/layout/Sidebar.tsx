@@ -20,28 +20,28 @@ export const Sidebar: React.FC = () => {
 
   const navItems = [
     {
-      to: activeId ? `/dashboard/${activeId}` : '/',
+      to: '/search',
+      label: 'Cambiar Jugador',
+      icon: Search,
+      disabled: false,
+    },
+    {
+      to: activeId ? `/dashboard/${activeId}` : '/search',
       label: 'Dashboard',
       icon: LayoutDashboard,
       disabled: !activeId,
     },
     {
-      to: activeId ? `/heroes/${activeId}` : '/',
+      to: activeId ? `/heroes/${activeId}` : '/search',
       label: 'Héroes & Winrate',
       icon: Shield,
       disabled: !activeId,
     },
     {
-      to: activeId ? `/analysis/${activeId}` : '/',
+      to: activeId ? `/analysis/${activeId}` : '/search',
       label: 'Análisis Avanzado',
       icon: TrendingUp,
       disabled: !activeId,
-    },
-    {
-      to: '/search',
-      label: 'Cambiar Jugador',
-      icon: Search,
-      disabled: false,
     },
     {
       to: '/guides',
