@@ -28,6 +28,7 @@ import {
   RotateCcw,
   Compass,
 } from 'lucide-react';
+import { HeroCountersSection } from '../components/guides/HeroCountersSection';
 
 // ─── TYPES & INTERFACES ───────────────────────────────────────────────────────
 type TabId =
@@ -35,6 +36,7 @@ type TabId =
   | 'tecnicas'
   | 'roles'
   | 'heroes'
+  | 'counters'
   | 'items'
   | 'mapa'
   | 'macro'
@@ -54,6 +56,7 @@ const TABS: Tab[] = [
   { id: 'tecnicas', label: 'Técnicas Pro & Simuladores', icon: Crosshair, color: 'text-amber-400' },
   { id: 'roles', label: 'Roles (1 al 5)', icon: Users, color: 'text-violet-400' },
   { id: 'heroes', label: 'Héroes & Videos', icon: Swords, color: 'text-rose-400' },
+  { id: 'counters', label: 'Counters & Sinergias (Todos)', icon: Target, color: 'text-red-400' },
   { id: 'items', label: 'Objetos & Recetas', icon: Package, color: 'text-yellow-400' },
   { id: 'mapa', label: 'Mapa Interactivo', icon: Map, color: 'text-emerald-400' },
   { id: 'macro', label: 'Macro & Pizarra Táctica', icon: TrendingUp, color: 'text-orange-400' },
@@ -1370,6 +1373,7 @@ const CONTENT_MAP: Record<TabId, React.FC> = {
   tecnicas: TabTecnicas,
   roles: TabRoles,
   heroes: TabHeroes,
+  counters: HeroCountersSection,
   items: TabItems,
   mapa: TabMapa,
   macro: TabMacro,
@@ -1378,7 +1382,7 @@ const CONTENT_MAP: Record<TabId, React.FC> = {
 };
 
 export const GuidesPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabId>('heroes');
+  const [activeTab, setActiveTab] = useState<TabId>('counters');
   const Content = CONTENT_MAP[activeTab];
 
   return (
