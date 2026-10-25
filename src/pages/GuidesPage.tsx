@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   BookOpen,
   Swords,
@@ -27,6 +28,7 @@ import {
   Play,
   RotateCcw,
   Compass,
+  BarChart3,
 } from 'lucide-react';
 import { HeroCountersSection } from '../components/guides/HeroCountersSection';
 
@@ -1291,81 +1293,184 @@ const TabMacro: React.FC = () => (
 );
 
 // ─── TAB 8: PARCHES & META ───────────────────────────────────────────────────
-const TabParches: React.FC = () => (
-  <div className="space-y-4">
-    <Card>
-      <SectionTitle
-        icon={Activity}
-        title="Meta del Parche Actual — 7.41f"
-        subtitle="Héroes con mayor winrate en partidas competitivas"
-        color="text-pink-400"
-      />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
-        {[
-          { heroKey: 'skeleton_king', nameEn: 'Wraith King', tier: 'Tier S', pos: 'Carry', winrate: '53.8%' },
-          { heroKey: 'bristleback', nameEn: 'Bristleback', tier: 'Tier S', pos: 'Offlane', winrate: '53.1%' },
-          { heroKey: 'axe', nameEn: 'Axe', tier: 'Tier A', pos: 'Offlane', winrate: '52.4%' },
-          { heroKey: 'crystal_maiden', nameEn: 'Crystal Maiden', tier: 'Tier A', pos: 'Support', winrate: '52.0%' },
-          { heroKey: 'lion', nameEn: 'Lion', tier: 'Tier A', pos: 'Support', winrate: '51.7%' },
-          { heroKey: 'dragon_knight', nameEn: 'Dragon Knight', tier: 'Tier A', pos: 'Midlane', winrate: '51.5%' },
-        ].map((meta) => (
-          <Card key={meta.heroKey} className="p-3 border border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <HeroImage heroKey={meta.heroKey} name={meta.nameEn} className="w-10 h-10 rounded-lg" />
-              <div>
-                <div className="text-sm font-bold text-white">{meta.nameEn}</div>
-                <div className="text-[11px] text-gray-400">{meta.pos} · Winrate {meta.winrate}</div>
-              </div>
+const TabParches: React.FC = () => {
+  const navigate = useNavigate();
+  return (
+    <div className="space-y-4">
+      {/* Live Meta Banner */}
+      <Card className="border border-pink-500/40 bg-gradient-to-br from-pink-950/20 to-slate-900/80">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-pink-600/20 border border-pink-500/40 flex items-center justify-center flex-shrink-0">
+            <BarChart3 className="w-6 h-6 text-pink-400" />
+          </div>
+          <div className="flex-1">
+            <div className="text-base font-bold text-white mb-1">Meta & Tier List en Tiempo Real</div>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Consulta la Tier List actualizada (S/A/B/C/D), los héroes más pickeados, los de mejor y peor winrate
+              en cada bracket — desde Heraldo hasta Inmortal — basada en millones de partidas del parche actual.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/meta')}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold transition-all shadow-lg shadow-pink-950/50 flex-shrink-0"
+          >
+            Ver Meta Ahora <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </Card>
+
+      {/* Tier explanation */}
+      <Card>
+        <SectionTitle icon={Activity} title="¿Qué significa cada Tier?" color="text-pink-400" />
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-3">
+          {[
+            { tier: 'S', label: 'Dominante', color: 'border-amber-500/60 bg-amber-950/30 text-amber-300', desc: 'Winrate ≥54%' },
+            { tier: 'A', label: 'Fuerte', color: 'border-emerald-500/60 bg-emerald-950/30 text-emerald-300', desc: 'Winrate 52-54%' },
+            { tier: 'B', label: 'Equilibrado', color: 'border-sky-500/60 bg-sky-950/30 text-sky-300', desc: 'Winrate 50-52%' },
+            { tier: 'C', label: 'Regular', color: 'border-gray-500/60 bg-slate-900/50 text-gray-300', desc: 'Winrate 48-50%' },
+            { tier: 'D', label: 'Débil', color: 'border-rose-500/60 bg-rose-950/30 text-rose-300', desc: 'Winrate <48%' },
+          ].map(({ tier, label, color, desc }) => (
+            <div key={tier} className={`rounded-xl border p-3 text-center ${color}`}>
+              <div className="text-2xl font-black mb-1">{tier}</div>
+              <div className="text-xs font-bold">{label}</div>
+              <div className="text-[11px] opacity-75 mt-0.5">{desc}</div>
             </div>
-            <Badge color={meta.tier === 'Tier S' ? 'bg-amber-900/60 text-amber-300 font-bold' : 'bg-slate-800 text-gray-300 font-bold'}>
-              {meta.tier}
-            </Badge>
-          </Card>
-        ))}
-      </div>
-    </Card>
-  </div>
-);
+          ))}
+        </div>
+      </Card>
+
+      {/* Patch notes context */}
+      <Card>
+        <SectionTitle icon={Sparkles} title="¿Cómo leer el Meta?" subtitle="Guía rápida de interpretación" color="text-pink-400" />
+        <div className="space-y-2.5">
+          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-gray-300 leading-relaxed">
+            <strong className="text-amber-400">🏆 Tier S:</strong> Héroes que dominan en el parche actual. Generalmente tienen kits que se sinergian fuertemente con los ítems o mecánicas actuales. Son picks prioritarios en el draft.
+          </div>
+          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-gray-300 leading-relaxed">
+            <strong className="text-emerald-400">✅ Tier A:</strong> Excelentes picks. Tienen ventajas claras pero pueden ser countered si el enemigo se prepara. Son héroes seguros y confiables.
+          </div>
+          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-gray-300 leading-relaxed">
+            <strong className="text-sky-400">⚖️ Tier B:</strong> Héroes equilibrados. Su eficacia depende más del skill del jugador que del parche. Buenos picks si los dominas bien.
+          </div>
+          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-gray-300 leading-relaxed">
+            <strong className="text-rose-400">⚠️ Tier C/D:</strong> Héroes que actualmente están en desventaja. Pueden ganar con draft estratégico específico o en manos de especialistas.
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+};
 
 // ─── TAB 9: RECURSOS OFICIALES ────────────────────────────────────────────────
-const TabRecursos: React.FC = () => (
-  <div className="space-y-4">
-    <Card>
-      <SectionTitle
-        icon={ExternalLink}
-        title="Portales y Herramientas Recomendadas"
-        subtitle="Fuentes fiables para continuar tu progreso"
-        color="text-teal-400"
-      />
-      <div className="grid gap-2.5">
-        {[
-          { name: 'Portal Oficial de Aprendizaje Valve', url: 'https://www.dota2.com/learn', desc: 'Tutoriales oficiales de Valve en español.' },
-          { name: 'Dota 2 Wiki (Liquipedia)', url: 'https://liquipedia.net/dota2/Portal:Heroes', desc: 'Enciclopedia completa de mecánicas y números.' },
-          { name: 'Dotabuff', url: 'https://www.dotabuff.com', desc: 'Estadísticas globales de winrates y builds.' },
-          { name: 'OpenDota', url: 'https://www.opendota.com', desc: 'Análisis de repeticiones y visión de mapa gratuita.' },
-          { name: 'r/learndota2', url: 'https://www.reddit.com/r/learndota2', desc: 'Comunidad activa de Reddit dedicada al aprendizaje.' },
-        ].map((rec) => (
-          <a
-            key={rec.name}
-            href={rec.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-slate-700 hover:bg-slate-900/80 transition-colors group"
-          >
-            <div>
-              <div className="text-sm font-semibold text-white group-hover:text-red-400 transition-colors flex items-center gap-1.5">
-                {rec.name}
-                <ExternalLink className="w-3.5 h-3.5 text-gray-500" />
+const TabRecursos: React.FC = () => {
+  const navigate = useNavigate();
+
+  const internalTools = [
+    {
+      label: 'Enciclopedia de Héroes',
+      desc: '125+ héroes con habilidades, árbol de talentos, builds populares, counters y aliados con winrates reales.',
+      icon: Swords,
+      color: 'border-amber-500/40 bg-amber-950/10 text-amber-400',
+      route: '/hero-encyclopedia',
+    },
+    {
+      label: 'Base de Datos de Ítems',
+      desc: 'Catálogo completo de ítems con costos, componentes, efectos activos/pasivos y cooldowns.',
+      icon: Package,
+      color: 'border-yellow-500/40 bg-yellow-950/10 text-yellow-400',
+      route: '/items',
+    },
+    {
+      label: 'Asistente de Draft',
+      desc: 'Arma tu lineup 5v5 interactivo. Detecta sinergias, counters y analiza la composición de equipo.',
+      icon: Users,
+      color: 'border-sky-500/40 bg-sky-950/10 text-sky-400',
+      route: '/draft',
+    },
+    {
+      label: 'Meta & Tier List',
+      desc: 'Tier list S/A/B/C/D basada en datos reales del parche actual. Filtrable por bracket de MMR.',
+      icon: BarChart3,
+      color: 'border-pink-500/40 bg-pink-950/10 text-pink-400',
+      route: '/meta',
+    },
+  ];
+
+  const externalLinks = [
+    { name: 'Portal Oficial de Aprendizaje Valve', url: 'https://www.dota2.com/learn', desc: 'Tutoriales oficiales de Valve en español.' },
+    { name: 'Dota 2 Wiki (Liquipedia)', url: 'https://liquipedia.net/dota2/Portal:Heroes', desc: 'Enciclopedia completa de mecánicas y números.' },
+    { name: 'Dotabuff', url: 'https://www.dotabuff.com', desc: 'Estadísticas globales de winrates y builds.' },
+    { name: 'OpenDota', url: 'https://www.opendota.com', desc: 'Análisis de repeticiones y visión de mapa gratuita.' },
+    { name: 'r/learndota2', url: 'https://www.reddit.com/r/learndota2', desc: 'Comunidad activa de Reddit dedicada al aprendizaje.' },
+  ];
+
+  return (
+    <div className="space-y-5">
+      {/* Internal Tools */}
+      <Card>
+        <SectionTitle
+          icon={Sparkles}
+          title="Herramientas de DotaScope"
+          subtitle="Funciones integradas con datos reales de OpenDota"
+          color="text-red-400"
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+          {internalTools.map((tool) => {
+            const Icon = tool.icon;
+            return (
+              <button
+                key={tool.route}
+                onClick={() => navigate(tool.route)}
+                className={`flex items-start gap-3.5 p-4 rounded-xl border ${tool.color} hover:opacity-90 transition-all text-left group`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-slate-900/60 border ${tool.color.split(' ')[0]}`}>
+                  <Icon className={`w-5 h-5 ${tool.color.split(' ')[2]}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold text-white group-hover:text-red-300 transition-colors flex items-center gap-1.5">
+                    {tool.label}
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                  <div className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">{tool.desc}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* External Links */}
+      <Card>
+        <SectionTitle
+          icon={ExternalLink}
+          title="Portales y Herramientas Externas"
+          subtitle="Fuentes fiables para continuar tu progreso"
+          color="text-teal-400"
+        />
+        <div className="grid gap-2.5">
+          {externalLinks.map((rec) => (
+            <a
+              key={rec.name}
+              href={rec.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-slate-700 hover:bg-slate-900/80 transition-colors group"
+            >
+              <div>
+                <div className="text-sm font-semibold text-white group-hover:text-red-400 transition-colors flex items-center gap-1.5">
+                  {rec.name}
+                  <ExternalLink className="w-3.5 h-3.5 text-gray-500" />
+                </div>
+                <div className="text-xs text-gray-400 mt-0.5">{rec.desc}</div>
               </div>
-              <div className="text-xs text-gray-400 mt-0.5">{rec.desc}</div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-gray-300 flex-shrink-0" />
-          </a>
-        ))}
-      </div>
-    </Card>
-  </div>
-);
+              <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-gray-300 flex-shrink-0" />
+            </a>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+};
 
 // ─── MAIN GUIDES PAGE COMPONENT ──────────────────────────────────────────────
 const CONTENT_MAP: Record<TabId, React.FC> = {
