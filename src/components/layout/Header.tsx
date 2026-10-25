@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, Swords, User, RefreshCw } from 'lucide-react';
+import { Search, Swords, User, RefreshCw, Download } from 'lucide-react';
 import { usePlayerContext } from '../../context/PlayerContext';
 import { parsePlayerId } from '../../utils/steamId';
 import { getRankName } from '../../utils/formatting';
+import { usePwaInstall } from '../../hooks/usePwaInstall';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { player, accountId, loading, setAccountId, refetchPlayer } = usePlayerContext();
+  const { isInstallable, installApp } = usePwaInstall();
   const [searchInput, setSearchInput] = useState('');
 
   const handleSearch = (e: React.FormEvent) => {
@@ -38,9 +40,11 @@ export const Header: React.FC = () => {
           to={accountId ? `/dashboard/${accountId}` : '/dashboard/1242630127'}
           className="flex items-center gap-2.5 group flex-shrink-0"
         >
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-red-600 to-rose-700 flex items-center justify-center shadow-lg shadow-red-950/50 group-hover:scale-105 transition-transform">
-            <Swords className="w-5 h-5 text-white" />
-          </div>
+          <img
+            src="./icons/icon.svg"
+            alt="DotaScope"
+            className="w-9 h-9 rounded-xl shadow-lg shadow-rose-950/50 group-hover:scale-105 transition-transform"
+          />
           <div className="flex flex-col">
             <span className="font-bold text-lg tracking-wider text-white flex items-center gap-1">
               DOTA<span className="text-red-500 font-extrabold">SCOPE</span>
@@ -65,8 +69,19 @@ export const Header: React.FC = () => {
           </div>
         </form>
 
-        {/* Player Profile / Status */}
-        <div className="flex items-center gap-3 flex-shrink-0">
+        {/* Player Profile / Status & PWA Install */}
+        <div className="flex items-center gap-2.5 flex-shrink-0">
+          {/* PWA Install Button */}
+          {isInstallable && (
+            <button
+              onClick={installApp}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 hover:text-white text-xs font-semibold transition shadow-sm animate-pulse"
+              title="Instalar DotaScope como aplicación en tu pantalla de inicio"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Instalar App</span>
+            </button>
+          )}
           {accountId && player ? (
             <div className="flex items-center gap-3">
               <button

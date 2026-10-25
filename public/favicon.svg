@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="bgGrad" cx="50%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="50%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </radialGradient>
+
+    <!-- Scope Glow -->
+    <radialGradient id="scopeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#e11d48" stop-opacity="0.3"/>
+      <stop offset="70%" stop-color="#f43f5e" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Radiant Cyan/Emerald Gradient -->
+    <linearGradient id="radiantGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="50%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+
+    <!-- Dire Crimson/Flame Gradient -->
+    <linearGradient id="direGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f43f5e"/>
+      <stop offset="50%" stop-color="#e11d48"/>
+      <stop offset="100%" stop-color="#be123c"/>
+    </linearGradient>
+
+    <!-- Golden Scope Ring -->
+    <linearGradient id="scopeRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Squircle App Base -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  
+  <!-- Outer Tech Border -->
+  <rect x="12" y="12" width="488" height="488" rx="100" fill="none" stroke="#334155" stroke-width="3" stroke-opacity="0.5"/>
+
+  <!-- Scope Reticle Glow -->
+  <circle cx="256" cy="256" r="180" fill="url(#scopeGlow)"/>
+
+  <!-- Tactical Radar Rings -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="8 6" opacity="0.6"/>
+  <circle cx="256" cy="256" r="130" fill="none" stroke="#334155" stroke-width="1.5" opacity="0.8"/>
+  <circle cx="256" cy="256" r="80" fill="none" stroke="#e11d48" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.7"/>
+
+  <!-- Scope Crosshairs with Tick Marks -->
+  <line x1="256" y1="56" x2="256" y2="116" stroke="url(#scopeRing)" stroke-width="4" stroke-linecap="round"/>
+  <line x1="256" y1="396" x2="256" y2="456" stroke="url(#scopeRing)" stroke-width="4" stroke-linecap="round"/>
+  <line x1="56" y1="256" x2="116" y2="256" stroke="url(#scopeRing)" stroke-width="4" stroke-linecap="round"/>
+  <line x1="396" y1="256" x2="456" y2="256" stroke="url(#scopeRing)" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Corner Reticle Brackets -->
+  <path d="M 176 146 L 146 146 L 146 176" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 336 146 L 366 146 L 366 176" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 146 336 L 146 366 L 176 366" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 366 336 L 366 366 L 336 366" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- DOTA 2 EMBLEM - CENTER SHIELD & RIVER -->
+  <!-- Diagonal River (Dark Cut) -->
+  <path d="M 150 362 L 362 150 L 372 160 L 160 372 Z" fill="#020617" opacity="0.9"/>
+
+  <!-- Radiant Top-Right Territory (Shield Half) -->
+  <path d="M 230 145 C 290 145 355 170 367 250 C 370 270 360 300 345 320 L 320 295 C 330 270 330 230 280 205 C 255 192 230 190 205 195 Z" 
+        fill="url(#radiantGrad)" filter="url(#glow)"/>
+
+  <!-- Dire Bottom-Left Territory (Shield Half) -->
+  <path d="M 282 367 C 222 367 157 342 145 262 C 142 242 152 212 167 192 L 192 217 C 182 242 182 282 232 307 C 257 320 282 322 307 317 Z" 
+        fill="url(#direGrad)" filter="url(#glow)"/>
+
+  <!-- Center Eye / Target Core -->
+  <circle cx="256" cy="256" r="16" fill="#0f172a" stroke="#fbbf24" stroke-width="3"/>
+  <circle cx="256" cy="256" r="6" fill="#f43f5e"/>
+</svg>
