@@ -6,9 +6,7 @@
 
 // Intenta primero la variable de entorno, luego localStorage, luego esta default
 export const GEMINI_DEFAULT_KEY: string =
-  (typeof import.meta !== 'undefined' && (import.meta as Record<string, unknown>).env
-    ? ((import.meta as Record<string, Record<string, string>>).env['VITE_GEMINI_KEY'] ?? '')
-    : '') ||
+  (typeof import.meta !== 'undefined' && (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_GEMINI_KEY) ||
   (typeof localStorage !== 'undefined' ? (localStorage.getItem('dota_gemini_key') ?? '') : '') ||
   '';
 

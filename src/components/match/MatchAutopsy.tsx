@@ -64,7 +64,7 @@ function buildRadarData(ts: { laning: number; vision: number | null; economy: nu
   ];
 }
 
-function metricColor(status: 'good' | 'average' | 'bad') {
+function metricColor(status: 'good' | 'average' | 'poor' | 'bad') {
   if (status === 'good') return '#34d399';
   if (status === 'average') return '#fbbf24';
   return '#f87171';
@@ -519,50 +519,76 @@ export const MatchAutopsy: React.FC<MatchAutopsyProps> = ({ match, focusAccountI
           </div>
         )}
 
-        {/* AI Summary banner */}
+        {/* ── AI Results: structured coach analysis ── */}
         {aiStatus === 'done' && aiAnalysis && (
-          <div className="bg-indigo-950/30 border border-indigo-500/20 rounded-xl p-4 space-y-2">
-            <div className="flex items-center gap-2 text-xs font-bold text-indigo-400 uppercase tracking-wider mb-1">
-              <Sparkles className="w-3.5 h-3.5" /> {aiAnalysis.provider ? `Análisis ${aiAnalysis.provider}` : 'Análisis Coach IA'}
+          <>
+            {/* AI Summary banner */}
+            <div className="bg-indigo-950/30 border border-indigo-500/20 rounded-xl p-4 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-indigo-400 uppercase tracking-wider mb-1">
+                <Sparkles className="w-3.5 h-3.5" /> {aiAnalysis.provider ? `Análisis ${aiAnalysis.provider}` : 'Análisis Coach IA'}
+              </div>
+              <p className="text-sm text-gray-300 leading-relaxed">{aiAnalysis.summary}</p>
             </div>
-            <p className="text-sm text-gray-300 leading-relaxed">{aiAnalysis.summary}</p>
-          </div>
+
+            {/* Key Moments (IA) */}
+            {aiAnalysis.keyMoments && aiAnalysis.keyMoments.length > 0 && (
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3 flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5" /> Momentos Decisivos
+                </h4>
+                <div className="space-y-2">
+                  {aiAnalysis.keyMoments.map((m, i) => (
+                    <div key={i} className="flex items-start gap-2.5 text-sm text-gray-300">
+                      <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xs flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                      <span>{m}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Per-role AI advice */}
+            {aiAnalysis.perRoleAdvice && aiAnalysis.perRoleAdvice.length > 0 && (
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-3 flex items-center gap-1.5">
+                  <Award className="w-3.5 h-3.5" /> Consejos Personalizados por Rol
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  {aiAnalysis.perRoleAdvice.map((item, i) => (
+                    <div key={i} className="bg-slate-950/60 border border-slate-800 rounded-xl p-3 space-y-1.5">
+                      <div className="text-xs font-bold text-red-400 font-mono">{item.role}</div>
+                      <p className="text-[11px] text-gray-300 leading-relaxed">{item.advice}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* General Tips (IA) */}
+            {aiAnalysis.generalTips && aiAnalysis.generalTips.length > 0 && (
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-sky-400 mb-3 flex items-center gap-1.5">
+                  <Lightbulb className="w-3.5 h-3.5" /> Tips Generales del Coach
+                </h4>
+                <div className="space-y-2">
+                  {aiAnalysis.generalTips.map((tip, i) => (
+                    <div key={i} className="flex items-start gap-3 bg-sky-950/20 border border-sky-500/20 rounded-xl px-4 py-2.5">
+                      <ChevronRight className="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">{tip}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <p className="text-[11px] text-gray-600 italic pt-1">
+              * Análisis generado por {aiAnalysis.provider || 'Coach Táctico'} basado en datos reales de la partida.
+            </p>
+          </>
         )}
 
-        {/* Key Moments (IA) */}
-        {aiStatus === 'done' && aiAnalysis?.keyMoments?.length > 0 && (
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3 flex items-center gap-1.5">
-              <Flame className="w-3.5 h-3.5" /> Momentos Decisivos
-            </h4>
-            <div className="space-y-2">
-              {aiAnalysis.keyMoments.map((m, i) => (
-                <div key={i} className="flex items-start gap-2.5 text-sm text-gray-300">
-                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xs flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
-                  <span>{m}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Per-role AI advice (replaces/augments static recommendations) */}
-        {aiStatus === 'done' && aiAnalysis?.perRoleAdvice?.length > 0 ? (
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-3 flex items-center gap-1.5">
-              <Award className="w-3.5 h-3.5" /> Consejos Personalizados por Rol
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-              {aiAnalysis.perRoleAdvice.map((item, i) => (
-                <div key={i} className="bg-slate-950/60 border border-slate-800 rounded-xl p-3 space-y-1.5">
-                  <div className="text-xs font-bold text-red-400 font-mono">{item.role}</div>
-                  <p className="text-[11px] text-gray-300 leading-relaxed">{item.advice}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          /* Fallback: rule-based recommendations cuando IA no está lista */
+        {/* Fallback: rule-based recommendations cuando IA no está lista */}
+        {(!aiAnalysis || aiStatus !== 'done') && (
           <div className="space-y-3">
             {recommendations.map((rec, idx) => (
               <div key={idx} className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-4 flex items-start gap-3 hover:border-slate-700 transition">
@@ -571,29 +597,6 @@ export const MatchAutopsy: React.FC<MatchAutopsyProps> = ({ match, focusAccountI
               </div>
             ))}
           </div>
-        )}
-
-        {/* General Tips (IA) */}
-        {aiStatus === 'done' && aiAnalysis?.generalTips?.length > 0 && (
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-sky-400 mb-3 flex items-center gap-1.5">
-              <Lightbulb className="w-3.5 h-3.5" /> Tips Generales del Coach
-            </h4>
-            <div className="space-y-2">
-              {aiAnalysis.generalTips.map((tip, i) => (
-                <div key={i} className="flex items-start gap-3 bg-sky-950/20 border border-sky-500/20 rounded-xl px-4 py-2.5">
-                  <ChevronRight className="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">{tip}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {aiStatus === 'done' && (
-          <p className="text-[11px] text-gray-600 italic pt-1">
-            * Análisis generado por Gemini 2.0 Flash basado en datos reales de la partida.
-          </p>
         )}
       </div>
     </div>
