@@ -8,6 +8,7 @@ import {
   Sparkles,
   Gamepad2,
   BookOpen,
+  GraduationCap,
 } from 'lucide-react';
 import { usePlayerContext } from '../../context/PlayerContext';
 
@@ -40,6 +41,12 @@ export const Sidebar: React.FC = () => {
       to: '/search',
       label: 'Cambiar Jugador',
       icon: Search,
+      disabled: false,
+    },
+    {
+      to: '/guides',
+      label: 'Guías de Dota',
+      icon: GraduationCap,
       disabled: false,
     },
     {

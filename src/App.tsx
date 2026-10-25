@@ -7,6 +7,7 @@ import HeroesPage from './pages/HeroesPage';
 import AnalysisPage from './pages/AnalysisPage';
 import MatchPage from './pages/MatchPage';
 import LegendPage from './pages/LegendPage';
+import GuidesPage from './pages/GuidesPage';
 
 export const App: React.FC = () => {
   return (
@@ -32,6 +33,9 @@ export const App: React.FC = () => {
 
         {/* Legend / Glossary Page */}
         <Route path="legend" element={<LegendPage />} />
+
+        {/* Guides & Learning Page */}
+        <Route path="guides" element={<GuidesPage />} />
 
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
