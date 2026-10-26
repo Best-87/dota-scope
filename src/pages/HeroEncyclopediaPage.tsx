@@ -28,6 +28,10 @@ import {
   HelpCircle,
   Flame,
 } from 'lucide-react';
+import {
+  getTailoredAntiItemsForHero,
+  type AntiItemDetail,
+} from '../components/guides/HeroCountersSection';
 
 // ─── INTERFACES & TYPES ───────────────────────────────────────────────────────
 
@@ -313,7 +317,7 @@ export const getItemImageUrl = (itemKey: string): string => {
 };
 
 export const getAbilityImageUrl = (abilityKey: string): string => {
-  return `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/${abilityKey}_lg.png`;
+  return `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/${abilityKey}.png`;
 };
 
 // ─── ATTRIBUTE CONFIGURATION ──────────────────────────────────────────────────
@@ -438,10 +442,13 @@ const ItemPortrait: React.FC<{
 const AbilityPortrait: React.FC<{
   abilityKey: string;
   name: string;
+  imgOverride?: string;
   className?: string;
-}> = ({ abilityKey, name, className = 'w-12 h-12' }) => {
+}> = ({ abilityKey, name, imgOverride, className = 'w-12 h-12' }) => {
   const [error, setError] = useState(false);
-  const url = getAbilityImageUrl(abilityKey);
+  const primaryUrl = imgOverride
+    ? (imgOverride.startsWith('http') ? imgOverride : `https://cdn.cloudflare.steamstatic.com${imgOverride.startsWith('/') ? '' : '/'}${imgOverride}`)
+    : getAbilityImageUrl(abilityKey);
 
   return (
     <div
@@ -450,7 +457,7 @@ const AbilityPortrait: React.FC<{
     >
       {!error ? (
         <img
-          src={url}
+          src={primaryUrl}
           alt={name}
           onError={() => setError(true)}
           className="w-full h-full object-cover"
@@ -548,6 +555,168 @@ interface AbilitiesSectionProps {
   abilitiesDict: Record<string, AbilityConstant>;
 }
 
+// ─── SPANISH ABILITY TRANSLATIONS & DICTIONARY ────────────────────────────────
+const BEHAVIOR_ES: Record<string, string> = {
+  'Passive': 'Pasiva',
+  'Unit Target': 'Objetivo de Unidad',
+  'Point Target': 'Objetivo de Punto',
+  'No Target': 'Sin Objetivo (Instantáneo)',
+  'AOE': 'Área de Efecto (AoE)',
+  'Channeled': 'Canalizado',
+  'Instant Cast': 'Lanzamiento Instantáneo',
+  'Hidden': 'Oculto',
+  'Attack Target': 'Objetivo de Ataque',
+  'Toggle': 'Alternable (On/Off)',
+  'Autocast': 'Lanzamiento Automático',
+};
+
+const DAMAGE_TYPE_ES: Record<string, string> = {
+  'Magical': 'Mágico',
+  'Physical': 'Físico',
+  'Pure': 'Puro',
+};
+
+const ATTRIB_HEADER_ES: Record<string, string> = {
+  'DAMAGE:': 'DAÑO:',
+  'RADIUS:': 'RADIO:',
+  'DURATION:': 'DURACIÓN:',
+  'CAST RANGE:': 'ALCANCE DE LANZAMIENTO:',
+  'MOVE SPEED SLOW:': 'RALENTIZACIÓN DE MOVIMIENTO:',
+  'STUN DURATION:': 'DURACIÓN DE ATURDIMIENTO:',
+  'COOLDOWN:': 'TIEMPO DE RECARGA:',
+  'MANA BURN:': 'QUEMA DE MANÁ:',
+  'HEAL:': 'CURACIÓN:',
+  'BONUS DAMAGE:': 'DAÑO ADICIONAL:',
+  'ATTACK SPEED:': 'VELOCIDAD DE ATAQUE:',
+  'CRITICAL DAMAGE:': 'DAÑO CRÍTICO:',
+  'LIFESTEAL:': 'ROBO DE VIDA:',
+  'SILENCE DURATION:': 'DURACIÓN DEL SILENCIO:',
+  'ARMOR REDUCTION:': 'REDUCCIÓN DE ARMADURA:',
+  'MAGIC RESISTANCE:': 'RESISTENCIA MÁGICA:',
+};
+
+// Known common ability descriptions translated to Spanish
+const ABILITY_DESC_ES: Record<string, { dname?: string; desc?: string }> = {
+  antimage_mana_break: {
+    dname: 'Ruptura de Maná (Mana Break)',
+    desc: 'Quema el maná de un oponente en cada ataque e inflige daño físico adicional igual al 50% del maná quemado.',
+  },
+  antimage_blink: {
+    dname: 'Traslación (Blink)',
+    desc: 'Teletransportación a corta distancia que permite al Anti-Mago entrar y salir rápidamente del combate.',
+  },
+  antimage_counterspell: {
+    dname: 'Contrahechizo (Counterspell)',
+    desc: 'Aumenta pasivamente la resistencia mágica. Al activarse, crea un escudo que refleja hechizos dirigidos de vuelta al atacante.',
+  },
+  antimage_mana_void: {
+    dname: 'Vacío de Maná (Mana Void)',
+    desc: 'Por cada punto de maná que le falte a la unidad objetivo, inflige daño mágico devastador a ella y a los enemigos circundantes.',
+  },
+  axe_berserkers_call: {
+    dname: 'Llamada del Bersérker (Berserker\'s Call)',
+    desc: 'Axe provoca a los enemigos cercanos, forzándolos a atacarlo mientras él gana una bonificación masiva de armadura.',
+  },
+  axe_battle_hunger: {
+    dname: 'Sed de Batalla (Battle Hunger)',
+    desc: 'Enfurece a un enemigo, ralentizándolo e infligiéndole daño por segundo hasta que mate a una unidad o termine la duración.',
+  },
+  axe_counter_helix: {
+    dname: 'Contrahelicoidal (Counter Helix)',
+    desc: 'Al ser atacado, Axe tiene una probabilidad de realizar un contraataque giratorio que inflige daño puro a todos los enemigos cercanos.',
+  },
+  axe_culling_blade: {
+    dname: 'Hoja Selectiva (Culling Blade)',
+    desc: 'Axe ataca con fuerza letal. Si el enemigo tiene menos vida que el umbral, es ejecutado al instante y Axe gana velocidad de movimiento.',
+  },
+  crystal_maiden_crystal_nova: {
+    dname: 'Nova de Cristal (Crystal Nova)',
+    desc: 'Una ráfaga de escarcha que daña y ralentiza drásticamente el movimiento y la velocidad de ataque de los enemigos en el área.',
+  },
+  crystal_maiden_frostbite: {
+    dname: 'Congelación (Frostbite)',
+    desc: 'Encierra a un objetivo en hielo, inmovilizándolo, impidiéndole atacar e infligiendo daño periódico.',
+  },
+  crystal_maiden_brilliance_aura: {
+    dname: 'Aura Arcana (Arcane Aura)',
+    desc: 'Otorga regeneración de maná adicional a todos los aliados del mapa, con bonificación doble para Crystal Maiden.',
+  },
+  crystal_maiden_freezing_field: {
+    dname: 'Campo Congelante (Freezing Field)',
+    desc: 'Desata una tormenta de explosiones heladas alrededor de Crystal Maiden que inflige daño masivo y ralentiza a los enemigos.',
+  },
+  juggernaut_blade_fury: {
+    dname: 'Furia de la Hoja (Blade Fury)',
+    desc: 'Juggernaut gira en un torbellino de cuchillas, volviéndose inmune a la magia e infligiendo daño continuo a los enemigos cercanos.',
+  },
+  juggernaut_healing_ward: {
+    dname: 'Guardián Sanador (Healing Ward)',
+    desc: 'Invoca un guardián móvil que cura a los aliados cercanos en función de un porcentaje de su salud máxima.',
+  },
+  juggernaut_blade_dance: {
+    dname: 'Danza de la Hoja (Blade Dance)',
+    desc: 'Otorga pasivamente a Juggernaut una probabilidad de asestar golpes críticos con daño devastador.',
+  },
+  juggernaut_omislash: {
+    dname: 'Omnilátigo (Omnislash)',
+    desc: 'Juggernaut salta hacia los enemigos cercanos cortándolos a gran velocidad con invulnerabilidad total.',
+  },
+  juggernaut_swift_slash: {
+    dname: 'Corte Veloz (Swiftslash)',
+    desc: 'Una versión corta de Omnislash que realiza cortes rápidos sobre un objetivo específico.',
+  },
+  phantom_assassin_stifling_dagger: {
+    dname: 'Daga Asfixiante (Stifling Dagger)',
+    desc: 'Lanza una daga que ralentiza la velocidad de movimiento del enemigo e inflige daño físico escalado con sus ataques.',
+  },
+  phantom_assassin_phantom_strike: {
+    dname: 'Golpe Fantasmal (Phantom Strike)',
+    desc: 'Se teletransporta hacia una unidad objetivo aliada o enemiga, ganando una velocidad de ataque colosal si es enemigo.',
+  },
+  phantom_assassin_blur: {
+    dname: 'Difuminación (Blur)',
+    desc: 'Otorga pasivamente una alta probabilidad de evasión física. Al activarse, se vuelve casi invisible en el minimapa.',
+  },
+  phantom_assassin_coup_de_grace: {
+    dname: 'Golpe de Gracia (Coup de Grâce)',
+    desc: 'Phantom Assassin perfecciona sus técnicas de combate, obteniendo una probabilidad de conectar golpes críticos fulminantes.',
+  },
+  pudge_meat_hook: {
+    dname: 'Gancho de Carne (Meat Hook)',
+    desc: 'Lanza un gancho ensangrentado en una dirección fija. Si engancha una unidad, la arrastra hacia Pudge infligiendo daño puro si es enemiga.',
+  },
+  pudge_rot: {
+    dname: 'Pudrición (Rot)',
+    desc: 'Pudge emite una nube tóxica de gas fétido que ralentiza e inflige daño mágico continuo tanto a los enemigos como a sí mismo.',
+  },
+  pudge_flesh_heap: {
+    dname: 'Montón de Carne (Flesh Heap)',
+    desc: 'Otorga resistencia mágica pasiva y acumula fuerza y regeneración permanentemente con cada héroe enemigo eliminado cerca.',
+  },
+  pudge_dismember: {
+    dname: 'Desmembrar (Dismember)',
+    desc: 'Pudge canaliza y muerde a una unidad enemiga, inmovilizándola e infligiéndole daño masivo mientras se cura a sí mismo.',
+  },
+};
+
+const translateBehavior = (b: string): string => {
+  if (!b) return '';
+  return b
+    .split(',')
+    .map((part) => BEHAVIOR_ES[part.trim()] || part.trim())
+    .join(', ');
+};
+
+const translateDamageType = (dt: string): string => {
+  if (!dt) return '';
+  return DAMAGE_TYPE_ES[dt] || dt;
+};
+
+const translateAttribHeader = (header: string): string => {
+  if (!header) return '';
+  return ATTRIB_HEADER_ES[header] || header;
+};
+
 const AbilitiesSection: React.FC<AbilitiesSectionProps> = ({
   heroKey,
   abilityKeys,
@@ -599,14 +768,16 @@ const AbilitiesSection: React.FC<AbilitiesSectionProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {resolvedKeys.map((key) => {
             const ab = abilitiesDict[key] || {};
-            const dname = ab.dname || key.replace(/_/g, ' ');
-            const desc = ab.desc || 'Sin descripción disponible para esta habilidad.';
+            const spanishOverride = ABILITY_DESC_ES[key];
+            const dname = spanishOverride?.dname || ab.dname || key.replace(/_/g, ' ');
+            const desc = spanishOverride?.desc || ab.desc || 'Sin descripción disponible para esta habilidad.';
             const cd = formatList(ab.cd);
             const mc = formatList(ab.mc || ab.cost);
-            const behavior = Array.isArray(ab.behavior)
+            const rawBehavior = Array.isArray(ab.behavior)
               ? ab.behavior.join(', ')
               : ab.behavior || '';
-            const dmgType = ab.dmg_type;
+            const behavior = translateBehavior(rawBehavior);
+            const dmgType = translateDamageType(ab.dmg_type || '');
             const bkbPierce = ab.bkbpierce;
 
             // Aghanim upgrades
@@ -621,7 +792,7 @@ const AbilitiesSection: React.FC<AbilitiesSectionProps> = ({
                 <div>
                   {/* Header: Icon, Name, Behavior */}
                   <div className="flex items-start gap-3">
-                    <AbilityPortrait abilityKey={key} name={dname} className="w-14 h-14" />
+                    <AbilityPortrait abilityKey={key} imgOverride={ab.img} name={dname} className="w-14 h-14" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between flex-wrap gap-1">
                         <h4 className="text-base font-bold text-white leading-snug truncate">
@@ -630,9 +801,9 @@ const AbilitiesSection: React.FC<AbilitiesSectionProps> = ({
                         {dmgType && (
                           <span
                             className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                              dmgType.toLowerCase().includes('mag')
+                              dmgType.toLowerCase().includes('mág')
                                 ? 'bg-sky-950 text-sky-300 border border-sky-800/60'
-                                : dmgType.toLowerCase().includes('phys')
+                                : dmgType.toLowerCase().includes('fís')
                                 ? 'bg-rose-950 text-rose-300 border border-rose-800/60'
                                 : 'bg-amber-950 text-amber-300 border border-amber-800/60'
                             }`}
@@ -673,14 +844,18 @@ const AbilitiesSection: React.FC<AbilitiesSectionProps> = ({
                   {/* Attributes detail list if present */}
                   {ab.attrib && ab.attrib.length > 0 && (
                     <div className="mt-3 pt-2.5 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
-                      {ab.attrib.slice(0, 6).map((attrItem, idx) => (
-                        <div key={idx} className="flex justify-between text-gray-400">
-                          <span className="truncate pr-1">{attrItem.header || attrItem.key}:</span>
-                          <span className="font-mono text-gray-200 font-semibold flex-shrink-0">
-                            {formatList(attrItem.value)}
-                          </span>
-                        </div>
-                      ))}
+                      {ab.attrib.slice(0, 6).map((attrItem, idx) => {
+                        const rawHeader = attrItem.header || attrItem.key || '';
+                        const translatedHeader = translateAttribHeader(rawHeader);
+                        return (
+                          <div key={idx} className="flex justify-between text-gray-400">
+                            <span className="truncate pr-1">{translatedHeader}:</span>
+                            <span className="font-mono text-gray-200 font-semibold flex-shrink-0">
+                              {formatList(attrItem.value)}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
 
@@ -730,14 +905,78 @@ const AbilitiesSection: React.FC<AbilitiesSectionProps> = ({
   );
 };
 
+// ─── HERO ANTI-BUILDS (ITEMS RECOMENDADOS EN CONTRA) ──────────────────────────
+
+interface HeroAntiBuildsSectionProps {
+  hero: HeroData;
+}
+
+const HeroAntiBuildsSection: React.FC<HeroAntiBuildsSectionProps> = ({ hero }) => {
+  const heroKey = getHeroCdnKey(hero.name);
+  const nameEn = hero.localized_name || hero.name;
+  const nameEs = getHeroSpanishName(nameEn, heroKey);
+  const antiItems = useMemo(() => {
+    return getTailoredAntiItemsForHero(
+      nameEn,
+      heroKey,
+      hero.primary_attr || 'str',
+      hero.roles || []
+    );
+  }, [nameEn, heroKey, hero.primary_attr, hero.roles]);
+
+  if (!antiItems || antiItems.length === 0) return null;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-amber-400" />
+          <h3 className="text-base font-bold text-white tracking-tight">
+            Anti-Builds & Objetos para Frenar a {nameEs}
+          </h3>
+        </div>
+        <span className="text-[11px] font-mono text-gray-400 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
+          {antiItems.length} objetos tácticos clave
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {antiItems.map((item, idx) => (
+          <div
+            key={`${item.itemKey}-${idx}`}
+            className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800/90 hover:border-amber-500/40 transition flex items-start gap-3 shadow-lg"
+          >
+            <ItemPortrait itemKey={item.itemKey} name={item.nameEs} className="w-12 h-12 rounded-xl mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-sm font-bold text-white truncate">{item.nameEs}</span>
+                {item.cost > 0 && (
+                  <span className="text-xs font-mono font-bold text-amber-400 flex-shrink-0">
+                    🪙 {item.cost}g
+                  </span>
+                )}
+              </div>
+              <div className="text-[10px] text-gray-500 mb-1.5">{item.nameEn}</div>
+              <p className="text-xs text-gray-300 leading-relaxed bg-slate-950/60 p-2 rounded-lg border border-slate-800/80">
+                {item.tacticalWhy}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ─── ITEM POPULARITY COMPONENT ────────────────────────────────────────────────
 
 interface ItemPopularityProps {
   heroId: number;
   itemsDict: Record<string, ItemConstant>;
+  itemIdsDict: Record<string, string>;
 }
 
-const ItemPopularity: React.FC<ItemPopularityProps> = ({ heroId, itemsDict }) => {
+const ItemPopularity: React.FC<ItemPopularityProps> = ({ heroId, itemsDict, itemIdsDict }) => {
   const [data, setData] = useState<ItemPopularityResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -769,12 +1008,20 @@ const ItemPopularity: React.FC<ItemPopularityProps> = ({ heroId, itemsDict }) =>
     fetchItems();
   }, [fetchItems]);
 
-  const getItemDName = (key: string): string => {
-    const clean = key.replace(/^item_/, '');
+  const resolveItemKey = (rawKey: string): string => {
+    // If it's a numeric ID like "1", "11", look it up in itemIdsDict
+    if (itemIdsDict && itemIdsDict[rawKey]) {
+      return itemIdsDict[rawKey];
+    }
+    return rawKey.replace(/^item_/, '');
+  };
+
+  const getItemDName = (rawKey: string, resolvedKey: string): string => {
+    if (itemsDict[resolvedKey]?.dname) return itemsDict[resolvedKey].dname;
+    const clean = rawKey.replace(/^item_/, '');
     if (itemsDict[clean]?.dname) return itemsDict[clean].dname;
-    if (itemsDict[key]?.dname) return itemsDict[key].dname;
     // Format words
-    return clean
+    return resolvedKey
       .replace(/_/g, ' ')
       .replace(/\b\w/g, (c) => c.toUpperCase());
   };
@@ -794,14 +1041,15 @@ const ItemPopularity: React.FC<ItemPopularityProps> = ({ heroId, itemsDict }) =>
       <div className="space-y-2">
         <h4 className={`text-xs font-bold tracking-wide uppercase ${color}`}>{title}</h4>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          {sortedItems.map(([key, count]) => {
-            const dname = getItemDName(key);
+          {sortedItems.map(([rawKey, count]) => {
+            const resolvedKey = resolveItemKey(rawKey);
+            const dname = getItemDName(rawKey, resolvedKey);
             return (
               <div
-                key={key}
+                key={rawKey}
                 className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 transition"
               >
-                <ItemPortrait itemKey={key} name={dname} className="w-9 h-9 rounded-lg" />
+                <ItemPortrait itemKey={resolvedKey} name={dname} className="w-9 h-9 rounded-lg" />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-semibold text-gray-200 truncate" title={dname}>
                     {dname}
@@ -1067,6 +1315,7 @@ interface HeroDetailViewProps {
   abilitiesDict: Record<string, AbilityConstant>;
   heroAbilitiesDict: Record<string, HeroAbilityMapping>;
   itemsDict: Record<string, ItemConstant>;
+  itemIdsDict: Record<string, string>;
 }
 
 const HeroDetailView: React.FC<HeroDetailViewProps> = ({
@@ -1076,6 +1325,7 @@ const HeroDetailView: React.FC<HeroDetailViewProps> = ({
   abilitiesDict,
   heroAbilitiesDict,
   itemsDict,
+  itemIdsDict,
 }) => {
   const heroKey = getHeroCdnKey(hero.name);
   const nameEn = hero.localized_name || hero.name;
@@ -1367,7 +1617,10 @@ const HeroDetailView: React.FC<HeroDetailViewProps> = ({
       <TalentTree talents={talents} abilitiesDict={abilitiesDict} />
 
       {/* Item Popularity Builds */}
-      <ItemPopularity heroId={hero.id} itemsDict={itemsDict} />
+      <ItemPopularity heroId={hero.id} itemsDict={itemsDict} itemIdsDict={itemIdsDict} />
+
+      {/* Anti-Builds (Items recomendados para contrarrestar a este héroe) */}
+      <HeroAntiBuildsSection hero={hero} />
 
       {/* Counters & Allies Section */}
       <CountersAndAllies heroId={hero.id} heroesDict={heroesDict} />
@@ -1383,6 +1636,7 @@ export const HeroEncyclopediaPage: React.FC = () => {
   const [abilitiesDict, setAbilitiesDict] = useState<Record<string, AbilityConstant>>({});
   const [heroAbilitiesDict, setHeroAbilitiesDict] = useState<Record<string, HeroAbilityMapping>>({});
   const [itemsDict, setItemsDict] = useState<Record<string, ItemConstant>>({});
+  const [itemIdsDict, setItemIdsDict] = useState<Record<string, string>>({});
 
   // Loading & Error States
   const [loading, setLoading] = useState(true);
@@ -1458,6 +1712,17 @@ export const HeroEncyclopediaPage: React.FC = () => {
         }
       }
       setItemsDict(cachedItems || {});
+
+      // 5. Item IDs mapping (numeric id to item string key)
+      let cachedItemIds = getLocalCache<Record<string, string>>('item_ids_constants');
+      if (!cachedItemIds) {
+        const res = await fetch('https://api.opendota.com/api/constants/item_ids');
+        if (res.ok) {
+          cachedItemIds = await res.json();
+          setLocalCache('item_ids_constants', cachedItemIds);
+        }
+      }
+      setItemIdsDict(cachedItemIds || {});
     } catch (err) {
       console.error('[DotaScope] Error loading constants:', err);
       setError(
@@ -1557,6 +1822,7 @@ export const HeroEncyclopediaPage: React.FC = () => {
           abilitiesDict={abilitiesDict}
           heroAbilitiesDict={heroAbilitiesDict}
           itemsDict={itemsDict}
+          itemIdsDict={itemIdsDict}
         />
       ) : (
         /* Otherwise render the Grid View */

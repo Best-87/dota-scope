@@ -111,7 +111,7 @@ export interface HeroTacticalProfile {
 }
 
 // ─── SPECIFIC ANTI-BUILD DATABASE PER INDIVIDUAL HERO ─────────────────────────
-const HERO_SPECIFIC_ANTIBUILDS: Record<string, {
+export const HERO_SPECIFIC_ANTIBUILDS: Record<string, {
   nameEs: string;
   dangerSummary: string;
   items: AntiItemDetail[];
@@ -560,7 +560,7 @@ const HERO_SPECIFIC_ANTIBUILDS: Record<string, {
 };
 
 // ─── DYNAMIC ANTI-ITEM ENGINE FOR ANY OTHER HERO ──────────────────────────────
-function getTailoredAntiItemsForHero(
+export function getTailoredAntiItemsForHero(
   heroName: string,
   heroKey: string,
   attr: string,
