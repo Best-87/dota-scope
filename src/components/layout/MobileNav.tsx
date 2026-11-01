@@ -56,10 +56,10 @@ export const MobileNav: React.FC = () => {
       disabled: !activeId,
     },
     {
-      to: '/hero-encyclopedia',
-      label: 'Héroes',
-      icon: Sword,
-      disabled: false,
+      to: activeId ? `/heroes/${activeId}` : '/search',
+      label: 'Mis Héroes',
+      icon: Shield,
+      disabled: !activeId,
     },
     {
       to: activeId ? `/analysis/${activeId}` : '/search',
@@ -79,14 +79,14 @@ export const MobileNav: React.FC = () => {
   // ── Secciones del menú desplegable "Más" (sin duplicar Dashboard, Draft ni Cambiar Jugador) ──
   const menuSections = [
     {
-      title: 'Jugador',
+      title: 'Dota 2',
       items: [
         {
-          to: activeId ? `/heroes/${activeId}` : '/search',
-          label: 'Mis Héroes',
-          description: 'Estadísticas detalladas, winrate y partidas por héroe',
-          icon: Shield,
-          disabled: !activeId,
+          to: '/hero-encyclopedia',
+          label: 'Enciclopedia de Héroes',
+          description: 'Habilidades, talentos, counters y builds de todos los héroes',
+          icon: Sword,
+          disabled: false,
         },
       ],
     },
@@ -132,7 +132,7 @@ export const MobileNav: React.FC = () => {
 
   // Comprobar si alguna de las rutas secundarias del modal está activa actualmente
   const isMoreActive = [
-    activeId ? `/heroes/${activeId}` : '',
+    '/hero-encyclopedia',
     '/items',
     '/meta',
     '/guides',

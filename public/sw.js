@@ -1,5 +1,9 @@
-// DotaScope Service Worker — v1.1.0
-const CACHE_NAME = 'dotascope-cache-v2';
+// DotaScope Service Worker — v2.0.0
+// The CACHE_VERSION is bumped at build time via sed in the build script.
+// When a new SW is detected, the app shows an "Actualizar" button.
+// On click, the app posts { type: 'SKIP_WAITING' } to this SW.
+const CACHE_VERSION = '1793505854';
+const CACHE_NAME = 'dotascope-v' + CACHE_VERSION;
 
 const STATIC_ASSETS = [
   './',
@@ -12,18 +16,21 @@ const STATIC_ASSETS = [
   './icons/apple-touch-icon.png'
 ];
 
-// Install: Cache core app shell and skip waiting immediately
+// ─── Install ──────────────────────────────────────────────────
+// Pre-cache the app shell. Do NOT skipWaiting — let the app control
+// the update lifecycle so the user sees the "Actualizar" button.
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS).catch((err) => {
         console.warn('[SW] Could not pre-cache some assets:', err);
       });
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
-// Activate: Delete old caches and take control of all clients
+// ─── Activate ─────────────────────────────────────────────────
+// Delete ALL old caches and take control of all clients.
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -39,17 +46,24 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Strategy:
-// 1. Navigation requests (HTML pages): Network-first (so updates are seen immediately), fallback to cache when offline
-// 2. External APIs (OpenDota, Steam CDN): Network-first
-// 3. Static assets with cache busters: Cache-first / Stale-while-revalidate
+// ─── Message listener: SKIP_WAITING ───────────────────────────
+// When the app says it's time to update, activate the new SW.
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// ─── Fetch Strategy ───────────────────────────────────────────
+// Navigation: Network-first (fresh content) → cache fallback
+// APIs: Network-first → cache fallback (offline support)
+// Static: Stale-while-revalidate
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  // 1. HTML Navigation: Always fetch fresh from network if online
+  // 1. HTML Navigation
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -67,7 +81,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. External APIs (OpenDota, Steam images): Network first, then cache
+  // 2. External APIs
   if (url.origin.includes('opendota.com') || url.origin.includes('steamstatic.com')) {
     event.respondWith(
       fetch(event.request)
@@ -83,7 +97,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Static Assets: Cache first with network background revalidation
+  // 3. Static Assets — Stale-while-revalidate
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request)

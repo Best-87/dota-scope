@@ -1,15 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, User, RefreshCw, Download, Clock, ChevronDown } from 'lucide-react';
+import { Search, User, RefreshCw, Download, Clock, ChevronDown, RefreshCcw } from 'lucide-react';
 import { usePlayerContext } from '../../context/PlayerContext';
 import { parsePlayerId } from '../../utils/steamId';
 import { getRankName } from '../../utils/formatting';
 import { usePwaInstall } from '../../hooks/usePwaInstall';
+import { usePwaUpdate } from '../../hooks/usePwaUpdate';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { player, accountId, loading, setAccountId, refetchPlayer, playerHistory } = usePlayerContext();
   const { isInstallable, installApp } = usePwaInstall();
+  const { isUpdateAvailable, updateApp, isUpdating } = usePwaUpdate();
   const [searchInput, setSearchInput] = useState('');
   const [historyOpen, setHistoryOpen] = useState(false);
   const historyRef = useRef<HTMLDivElement>(null);
@@ -91,10 +93,23 @@ export const Header: React.FC = () => {
           </div>
         </form>
 
-        {/* Player Profile / Status & PWA Install */}
+        {/* Player Profile / Status & PWA Install/Update */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
-          {/* PWA Install Button */}
-          {isInstallable && (
+          {/* PWA Update Button */}
+          {isUpdateAvailable && (
+            <button
+              onClick={updateApp}
+              disabled={isUpdating}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600/25 hover:bg-emerald-600/35 border border-emerald-500/50 text-emerald-300 hover:text-white text-xs font-semibold transition shadow-sm animate-pulse"
+              title="Nueva versión disponible. Haz clic para actualizar y limpiar caché automáticamente."
+            >
+              <RefreshCcw className={`w-3.5 h-3.5 ${isUpdating ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{isUpdating ? 'Actualizando...' : 'Actualizar App'}</span>
+            </button>
+          )}
+
+          {/* PWA Install Button (if installable and not updating) */}
+          {isInstallable && !isUpdateAvailable && (
             <button
               onClick={installApp}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 hover:text-white text-xs font-semibold transition shadow-sm animate-pulse"
