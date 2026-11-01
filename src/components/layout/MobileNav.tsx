@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useParams, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
-  Search,
   Sword,
   Package,
   TrendingUp,
@@ -46,7 +45,9 @@ export const MobileNav: React.FC = () => {
     };
   }, [isOpen]);
 
-  // Ítems principales de la barra inferior (fijos)
+  // ── Ítems principales de la barra inferior (fijos) ─────────────────────────────
+  // Análisis Inteligente (Avanzado) en el centro sustituyendo a uno de ellos,
+  // con Dashboard, Héroes, Draft y el botón Más.
   const primaryItems = [
     {
       to: activeId ? `/dashboard/${activeId}` : '/search',
@@ -61,10 +62,11 @@ export const MobileNav: React.FC = () => {
       disabled: false,
     },
     {
-      to: '/items',
-      label: 'Ítems',
-      icon: Package,
-      disabled: false,
+      to: activeId ? `/analysis/${activeId}` : '/search',
+      label: 'Análisis',
+      icon: TrendingUp,
+      disabled: !activeId,
+      highlight: true, // destacamos en el centro
     },
     {
       to: '/draft',
@@ -74,37 +76,16 @@ export const MobileNav: React.FC = () => {
     },
   ];
 
-  // Grupos completos en el modal / sheet desplegable "Más Opciones"
+  // ── Secciones del menú desplegable "Más" (sin duplicar Dashboard, Draft ni Cambiar Jugador) ──
   const menuSections = [
     {
       title: 'Jugador',
       items: [
         {
-          to: '/search',
-          label: 'Cambiar Jugador / Buscar',
-          description: 'Buscar por Steam ID, Friend ID o nombre',
-          icon: Search,
-          disabled: false,
-        },
-        {
-          to: activeId ? `/dashboard/${activeId}` : '/search',
-          label: 'Dashboard de Jugador',
-          description: 'Resumen general, winrate y partidas recientes',
-          icon: LayoutDashboard,
-          disabled: !activeId,
-        },
-        {
           to: activeId ? `/heroes/${activeId}` : '/search',
           label: 'Mis Héroes',
-          description: 'Estadísticas detalladas con cada héroe',
+          description: 'Estadísticas detalladas, winrate y partidas por héroe',
           icon: Shield,
-          disabled: !activeId,
-        },
-        {
-          to: activeId ? `/analysis/${activeId}` : '/search',
-          label: 'Análisis Avanzado',
-          description: 'Tendencias, farm y análisis de posiciones (Pos 1-5)',
-          icon: TrendingUp,
           disabled: !activeId,
         },
       ],
@@ -113,30 +94,16 @@ export const MobileNav: React.FC = () => {
       title: 'Dota 2 Helper',
       items: [
         {
-          to: '/hero-encyclopedia',
-          label: 'Enciclopedia de Héroes',
-          description: 'Habilidades en español, talentos, builds y counters',
-          icon: Sword,
-          disabled: false,
-        },
-        {
           to: '/items',
           label: 'Base de Datos de Ítems',
-          description: 'Todos los ítems, recetas, costos y descripciones',
+          description: 'Todos los ítems, recetas, costos, componentes y descripciones',
           icon: Package,
-          disabled: false,
-        },
-        {
-          to: '/draft',
-          label: 'Asistente de Draft',
-          description: 'Recomendaciones de picks, sinergias y counters',
-          icon: Users,
           disabled: false,
         },
         {
           to: '/meta',
           label: 'Meta & Tier List',
-          description: 'Tier list actual, picks más ganadores por medalla',
+          description: 'Tier list de héroes, winrates y picks más ganadores por medalla',
           icon: BarChart3,
           disabled: false,
         },
@@ -148,14 +115,14 @@ export const MobileNav: React.FC = () => {
         {
           to: '/guides',
           label: 'Guías de Dota 2',
-          description: 'Conceptos clave, timing de objetivos y visión',
+          description: 'Conceptos clave, timing de objetivos, mapa y visión',
           icon: GraduationCap,
           disabled: false,
         },
         {
           to: '/legend',
           label: 'Leyenda y Glosario',
-          description: 'Definiciones de términos competitivos (GPM, XPM, etc.)',
+          description: 'Definiciones de términos competitivos (GPM, XPM, KDA, etc.)',
           icon: BookOpen,
           disabled: false,
         },
@@ -166,11 +133,10 @@ export const MobileNav: React.FC = () => {
   // Comprobar si alguna de las rutas secundarias del modal está activa actualmente
   const isMoreActive = [
     activeId ? `/heroes/${activeId}` : '',
-    activeId ? `/analysis/${activeId}` : '',
+    '/items',
     '/meta',
     '/guides',
     '/legend',
-    '/search',
   ].some((path) => path && location.pathname.startsWith(path));
 
   return (
@@ -195,7 +161,7 @@ export const MobileNav: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
             <h3 className="text-sm font-bold text-white tracking-wide uppercase">
-              Menú de Secciones
+              Más Secciones
             </h3>
           </div>
           <button
@@ -271,16 +237,16 @@ export const MobileNav: React.FC = () => {
                       : isActive
                       ? 'text-red-400 bg-red-500/10 font-bold'
                       : 'text-gray-400 hover:text-gray-200'
-                  }`
+                  } ${item.highlight ? 'font-semibold' : ''}`
                 }
               >
-                <Icon className="w-5 h-5 mb-0.5" />
+                <Icon className={`w-5 h-5 mb-0.5 ${item.highlight ? 'text-amber-400' : ''}`} />
                 <span>{item.label}</span>
               </NavLink>
             );
           })}
 
-          {/* Botón "Más" para abrir el sheet con todos los apartados */}
+          {/* Botón "Más" para abrir el sheet con las secciones restantes */}
           <button
             onClick={() => setIsOpen((prev) => !prev)}
             type="button"
@@ -290,7 +256,7 @@ export const MobileNav: React.FC = () => {
                 : 'text-gray-400 hover:text-gray-200'
             }`}
             aria-expanded={isOpen}
-            aria-label="Ver todas las opciones"
+            aria-label="Ver más opciones"
           >
             <MoreHorizontal className="w-5 h-5 mb-0.5" />
             <span>Más</span>
