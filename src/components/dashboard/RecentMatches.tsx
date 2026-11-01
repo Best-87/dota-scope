@@ -6,6 +6,8 @@ import {
   ExternalLink,
   ChevronRight,
   TrendingUp,
+  CheckCircle2,
+  Activity,
 } from 'lucide-react';
 import type { RecentMatch } from '../../api/types';
 import HeroIcon from '../common/HeroIcon';
@@ -117,15 +119,26 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
                         </div>
                       </div>
                     </div>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase flex-shrink-0 ${
-                        won
-                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                      }`}
-                    >
-                      {won ? 'Victoria' : 'Derrota'}
-                    </span>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {Boolean(match.version != null && match.version > 0) && (
+                        <span
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+                          title="Partida analizada con telemetría completa (wards, log de compras y timelines disponibles)"
+                        >
+                          <CheckCircle2 className="w-3 h-3 text-cyan-400" />
+                          <span>Parseada</span>
+                        </span>
+                      )}
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase flex-shrink-0 ${
+                          won
+                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                            : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                        }`}
+                      >
+                        {won ? 'Victoria' : 'Derrota'}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 py-2 px-2.5 rounded-lg bg-slate-900/60 border border-slate-800/50 text-xs font-mono text-center">
@@ -200,7 +213,7 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
                           />
                           <HeroIcon heroId={match.hero_id} size="md" />
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-semibold text-sm text-gray-200 group-hover:text-white transition">
                                 {heroName}
                               </span>
@@ -213,6 +226,15 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
                               >
                                 {won ? 'Victoria' : 'Derrota'}
                               </span>
+                              {Boolean(match.version != null && match.version > 0) && (
+                                <span
+                                  className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+                                  title="Partida parseada con telemetría de repetición (visión, logs, gráficos por minuto)"
+                                >
+                                  <CheckCircle2 className="w-2.5 h-2.5 text-cyan-400" />
+                                  <span>Parseada</span>
+                                </span>
+                              )}
                             </div>
                             <div className="text-[11px] text-gray-500 flex items-center gap-2 mt-0.5">
                               <span>{radiant ? 'Radiant' : 'Dire'}</span>
