@@ -320,20 +320,20 @@ interface MapPoint {
 const MAP_POINTS: MapPoint[] = [
   {
     id: 'roshan_day',
-    name: 'Foso de Roshan (Día)',
+    name: 'Foso de Roshan (Día - Esquina Sureste)',
     category: 'roshan',
-    x: 78,
-    y: 84,
+    x: 77.5,
+    y: 77.0,
     desc: 'Roshan habita este foso durante el día (0:00 - 5:00, 10:00 - 15:00...). Otorga el Aegis of the Immortal.',
     timing: '☀️ De Día',
     image: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/aegis.png',
   },
   {
     id: 'roshan_night',
-    name: 'Foso de Roshan (Noche)',
+    name: 'Foso de Roshan (Noche - Esquina Noroeste)',
     category: 'roshan',
-    x: 22,
-    y: 16,
+    x: 22.5,
+    y: 23.0,
     desc: 'Roshan camina por el portal gemelo hacia este foso durante la noche (5:00 - 10:00, 15:00 - 20:00...).',
     timing: '🌙 De Noche',
     image: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/aegis.png',
@@ -342,8 +342,8 @@ const MAP_POINTS: MapPoint[] = [
     id: 'tormentor_radiant',
     name: 'Tormentor Radiant',
     category: 'tormentor',
-    x: 14,
-    y: 68,
+    x: 13.5,
+    y: 69.5,
     desc: 'Estructura neutral que refleja daño. Otorga un Aghanim\'s Shard gratuito al equipo al ser destruido.',
     timing: '⏱️ Minuto 20:00',
   },
@@ -351,8 +351,8 @@ const MAP_POINTS: MapPoint[] = [
     id: 'tormentor_dire',
     name: 'Tormentor Dire',
     category: 'tormentor',
-    x: 86,
-    y: 32,
+    x: 86.5,
+    y: 30.5,
     desc: 'Tormentor del bando Temible. Requiere al menos 2 o 3 héroes para repartir el daño reflejado.',
     timing: '⏱️ Minuto 20:00',
   },
@@ -360,8 +360,8 @@ const MAP_POINTS: MapPoint[] = [
     id: 'wisdom_radiant',
     name: 'Runa de Sabiduría Radiant',
     category: 'rune',
-    x: 10,
-    y: 86,
+    x: 13.0,
+    y: 84.0,
     desc: 'Otorga un salto masivo de experiencia para nivelar a los supports del equipo.',
     timing: '⏱️ Minuto 7:00 y cada 7 min',
   },
@@ -369,8 +369,8 @@ const MAP_POINTS: MapPoint[] = [
     id: 'wisdom_dire',
     name: 'Runa de Sabiduría Dire',
     category: 'rune',
-    x: 90,
-    y: 14,
+    x: 87.0,
+    y: 16.0,
     desc: 'Runa de experiencia del lado Dire. ¡Robarla al enemigo les quita un nivel crucial!',
     timing: '⏱️ Minuto 7:00 y cada 7 min',
   },
@@ -378,8 +378,8 @@ const MAP_POINTS: MapPoint[] = [
     id: 'river_rune_top',
     name: 'Runa de Poder (Río Superior)',
     category: 'rune',
-    x: 42,
-    y: 38,
+    x: 41.5,
+    y: 43.0,
     desc: 'Punto de aparición de Runas de Daño Doble, Haste, Invisibilidad, Regeneración o Ilusión.',
     timing: '⏱️ Minuto 6:00 y cada 2 min',
   },
@@ -387,8 +387,8 @@ const MAP_POINTS: MapPoint[] = [
     id: 'river_rune_bot',
     name: 'Runa de Poder (Río Inferior)',
     category: 'rune',
-    x: 58,
-    y: 62,
+    x: 58.5,
+    y: 57.0,
     desc: 'Segundo punto en el río. Solo una de las dos runas de río aparece a la vez desde el min 6.',
     timing: '⏱️ Minuto 6:00 y cada 2 min',
   },
@@ -396,8 +396,8 @@ const MAP_POINTS: MapPoint[] = [
     id: 'ward_cliff_mid',
     name: 'Risco de Visión Central (Mid Cliff)',
     category: 'ward',
-    x: 52,
-    y: 48,
+    x: 48.0,
+    y: 49.0,
     desc: 'Punto elevado que otorga visión de ambos accesos al río y el carril central.',
     timing: '👁️ Observer Ward',
   },
@@ -405,8 +405,8 @@ const MAP_POINTS: MapPoint[] = [
     id: 'ward_triangle_radiant',
     name: 'Colina del Triángulo Radiant',
     category: 'ward',
-    x: 36,
-    y: 68,
+    x: 37.0,
+    y: 69.0,
     desc: 'Protege a tu Carry mientras farmea los campamentos ancianos de la jungla.',
     timing: '👁️ Observer Ward',
   },
@@ -446,33 +446,23 @@ const InteractiveDotaMap: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Visual Map Representation */}
-        <div className="md:col-span-2 relative aspect-square w-full rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-slate-800 overflow-hidden shadow-2xl p-4 flex items-center justify-center">
-          {/* Base SVG Map Grid */}
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            {/* Radiant Territory (Green Tint) */}
-            <polygon points="0,50 50,100 0,100" fill="#064e3b" opacity="0.25" />
-            {/* Dire Territory (Red Tint) */}
-            <polygon points="50,0 100,0 100,50" fill="#881337" opacity="0.25" />
-            {/* River (Diagonal Blue Path) */}
-            <line x1="0" y1="20" x2="80" y2="100" stroke="#0284c7" strokeWidth="6" strokeOpacity="0.4" strokeLinecap="round" />
-            <line x1="20" y1="0" x2="100" y2="80" stroke="#0284c7" strokeWidth="6" strokeOpacity="0.4" strokeLinecap="round" />
-            {/* Lanes */}
-            <path d="M 10 90 L 10 15 L 85 15" stroke="#334155" strokeWidth="2" fill="none" strokeDasharray="2,2" />
-            <path d="M 15 85 L 85 15" stroke="#334155" strokeWidth="2.5" fill="none" />
-            <path d="M 15 85 L 90 85 L 90 10" stroke="#334155" strokeWidth="2" fill="none" strokeDasharray="2,2" />
-            {/* Bases */}
-            <circle cx="12" cy="88" r="5" fill="#10b981" opacity="0.8" />
-            <circle cx="88" cy="12" r="5" fill="#ef4444" opacity="0.8" />
-          </svg>
+        <div className="md:col-span-2 relative aspect-square w-full rounded-2xl bg-slate-950 border-2 border-slate-700 overflow-hidden shadow-2xl flex items-center justify-center">
+          {/* Authentic In-Game Dota 2 Minimap Background */}
+          <img
+            src="./minimap.png"
+            alt="Dota 2 Minimap"
+            className="w-full h-full object-cover select-none pointer-events-none"
+            loading="lazy"
+          />
 
           {/* Interactive Marker Pins */}
           {filteredPoints.map((pt) => {
             const isSelected = selectedPoint.id === pt.id;
             const markerColors = {
-              roshan: 'bg-amber-500 border-amber-300 text-amber-950',
-              tormentor: 'bg-violet-500 border-violet-300 text-violet-950',
-              rune: 'bg-sky-500 border-sky-300 text-sky-950',
-              ward: 'bg-emerald-500 border-emerald-300 text-emerald-950',
+              roshan: 'bg-amber-500 border-amber-200 text-amber-950 shadow-[0_0_10px_#f59e0b]',
+              tormentor: 'bg-fuchsia-600 border-fuchsia-200 text-white shadow-[0_0_10px_#c026d3]',
+              rune: 'bg-sky-400 border-sky-100 text-sky-950 shadow-[0_0_10px_#38bdf8]',
+              ward: 'bg-emerald-500 border-emerald-200 text-emerald-950 shadow-[0_0_10px_#10b981]',
             }[pt.category];
 
             return (
@@ -480,8 +470,8 @@ const InteractiveDotaMap: React.FC = () => {
                 key={pt.id}
                 onClick={() => setSelectedPoint(pt)}
                 style={{ left: `${pt.x}%`, top: `${pt.y}%` }}
-                className={`absolute -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-2 flex items-center justify-center font-bold text-[10px] transition-all transform hover:scale-125 z-10 ${markerColors} ${
-                  isSelected ? 'ring-4 ring-white scale-125 shadow-lg' : 'opacity-85 hover:opacity-100'
+                className={`absolute -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-2 flex items-center justify-center font-black text-[10px] transition-all transform hover:scale-135 z-10 ${markerColors} ${
+                  isSelected ? 'ring-4 ring-white scale-125 shadow-2xl z-20' : 'opacity-90 hover:opacity-100'
                 }`}
                 title={pt.name}
               >

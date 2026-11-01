@@ -34,6 +34,9 @@ export const DashboardPage: React.FC = () => {
   const {
     matches,
     loading: matchesLoading,
+    loadingMore,
+    hasMore,
+    loadMore,
     error: matchesError,
     refetch: refetchMatches,
   } = useMatches(accountId);
@@ -93,8 +96,14 @@ export const DashboardPage: React.FC = () => {
       {/* Most Played Heroes Grid */}
       <HeroGrid heroes={heroes} accountId={accountId} limit={6} />
 
-      {/* Recent Matches List */}
-      <RecentMatches matches={matches} loading={matchesLoading} />
+      {/* Recent Matches List with pagination */}
+      <RecentMatches
+        matches={matches}
+        loading={matchesLoading}
+        hasMore={hasMore}
+        onLoadMore={loadMore}
+        loadingMore={loadingMore}
+      />
     </div>
   );
 };
