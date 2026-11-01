@@ -11,210 +11,128 @@ import {
 } from 'recharts';
 import { Shield, Target, Award, Compass, Star } from 'lucide-react';
 import type { RecentMatch } from '../../api/types';
-import { didWin, calculateKDA } from '../../utils/formatting';
+import { didWin, calculateKDA, isRadiant } from '../../utils/formatting';
+import { HERO_PRIMARY_ROLE } from '../../utils/matchAutopsy';
 
 interface RoleAnalysisProps {
   matches: RecentMatch[];
 }
 
-// ─── Hero archetypes for position inference ────────────────────────────────────
-// Pos 1 heroes that are HARD CARRIES: typically safe lane, high CS
-const CARRY_HEROES = new Set([
-  1,   // Anti-Mage
-  6,   // Drow Ranger
-  8,   // Juggernaut
-  10,  // Morphling
-  12,  // Phantom Lancer
-  18,  // Sven
-  32,  // Riki
-  35,  // Sniper
-  41,  // Faceless Void
-  42,  // Wraith King
-  44,  // Phantom Assassin
-  48,  // Luna
-  54,  // Lifestealer
-  56,  // Clinkz
-  63,  // Weaver
-  67,  // Spectre
-  70,  // Ursa
-  72,  // Gyrocopter
-  81,  // Chaos Knight
-  93,  // Slark
-  94,  // Medusa
-  95,  // Troll Warlord
-  109, // Terrorblade
-  114, // Monkey King
-  138, // Muerta
-  145, // Kez
-]);
-
-// Pos 2 heroes: almost exclusively mid lane
-const MID_HEROES = new Set([
-  11,  // Shadow Fiend
-  13,  // Puck
-  15,  // Razor
-  17,  // Storm Spirit
-  22,  // Zeus
-  25,  // Lina
-  34,  // Tinker
-  36,  // Necrophos
-  39,  // Queen of Pain
-  43,  // Death Prophet
-  46,  // Templar Assassin
-  47,  // Viper
-  49,  // Dragon Knight
-  52,  // Leshrac
-  59,  // Huskar
-  65,  // Batrider
-  74,  // Invoker
-  76,  // Outworld Destroyer
-  82,  // Meepo
-  92,  // Arc Warden
-  106, // Ember Spirit
-  120, // Pangolier
-  126, // Void Spirit
-]);
-
-// Pos 3 heroes: typically off lane
-const OFFLANE_HEROES = new Set([
-  2,   // Axe
-  16,  // Sand King
-  28,  // Slardar
-  29,  // Tidehunter
-  33,  // Enigma
-  38,  // Beastmaster
-  55,  // Dark Seer
-  60,  // Night Stalker
-  69,  // Doom
-  71,  // Spirit Breaker
-  78,  // Brewmaster
-  96,  // Centaur Warrunner
-  97,  // Magnus
-  98,  // Timbersaw
-  99,  // Bristleback
-  104, // Legion Commander
-  108, // Underlord
-  129, // Mars
-  135, // Dawnbreaker
-  137, // Primal Beast
-]);
-
-// Pos 4/5 heroes: supports
-const SUPPORT_HEROES = new Set([
-  3,   // Bane
-  5,   // Crystal Maiden
-  7,   // Earthshaker
-  14,  // Pudge
-  19,  // Tiny
-  21,  // Windranger
-  26,  // Lion
-  27,  // Shadow Shaman
-  30,  // Witch Doctor
-  31,  // Lich
-  37,  // Warlock
-  50,  // Dazzle
-  51,  // Clockwerk
-  57,  // Omniknight
-  58,  // Enchantress
-  62,  // Bounty Hunter
-  64,  // Jakiro
-  66,  // Chen
-  68,  // Ancient Apparition
-  75,  // Silencer
-  79,  // Shadow Demon
-  83,  // Treant Protector
-  84,  // Ogre Magi
-  85,  // Undying
-  86,  // Rubick
-  87,  // Disruptor
-  88,  // Nyx Assassin
-  90,  // Keeper of the Light
-  91,  // Io
-  100, // Tusk
-  101, // Skywrath Mage
-  102, // Abaddon
-  105, // Techies
-  107, // Earth Spirit
-  111, // Oracle
-  121, // Grimstroke
-  123, // Hoodwink
-  128, // Snapfire
-  136, // Marci
-  139, // Ringmaster
-]);
-
-// Radiant lane number for each position
-// Radiant: safe = lane 1, mid = lane 2, off = lane 3
-// Dire: safe = lane 3, mid = lane 2, off = lane 1
-
 /**
- * Improved position inference for a single recent match.
- * Uses: hero archetype → lane field → lane_role → is_roaming → last_hits/gpm as tiebreaker.
- *
- * Returns 1-5 (Dota position).
+ * Intelligent and accurate position inference for a match player (Pos 1 to 5).
+ * Uses competitive Dota 2 criteria:
+ * 1. Base archetype (HERO_PRIMARY_ROLE for all 127 heroes)
+ * 2. Team side (Radiant vs Dire):
+ *    - Radiant: Safe = Lane 1, Off = Lane 3
+ *    - Dire: Safe = Lane 3, Off = Lane 1
+ *    - Mid = Lane 2
+ * 3. CS/min and GPM thresholds to disambiguate Core (Pos 1/2/3) vs Support (Pos 4/5)
+ * 4. Roaming telemetry (is_roaming) -> Soft Support (Pos 4)
+ * 5. Safe vs Offlane support positioning:
+ *    - Support in safe lane with core -> Pos 5 (Hard Support)
+ *    - Support roaming or in offlane -> Pos 4 (Soft Support)
  */
 function inferPosition(match: RecentMatch): 1 | 2 | 3 | 4 | 5 {
   const heroId = match.hero_id;
-  const lane = match.lane;           // 1=Safe(Radiant)/Off(Dire), 2=Mid, 3=Off(Radiant)/Safe(Dire)
-  const laneRole = match.lane_role;  // 1=Safe, 2=Mid, 3=Off, 4=Jungle
-  const isRoaming = match.is_roaming;
+  const primaryPos = HERO_PRIMARY_ROLE[heroId] || 4;
+  const lane = match.lane; // 1=Bot, 2=Mid, 3=Top
+  const laneRole = match.lane_role; // 1=Safe core, 2=Mid core, 3=Off core, 4=Jungle/Roam
+  const isRoaming = Boolean(match.is_roaming);
   const lh = match.last_hits || 0;
   const gpm = match.gold_per_min || 0;
+  const duration = match.duration || 1800;
+  const csPerMin = duration > 0 ? (lh * 60) / duration : 0;
+  const radiant = isRadiant(match.player_slot);
 
-  // ── Step 1: Hard-coded hero archetypes (most reliable) ─────────────────────
-  if (MID_HEROES.has(heroId) && (lane === 2 || laneRole === 2)) {
+  const safeLaneNum = radiant ? 1 : 3;
+  const offLaneNum = radiant ? 3 : 1;
+
+  // ── 1. Midlaner (Pos 2) Detection ─────────────────────────────────────────
+  // Solo mid heroes or players stationed in mid with core farm
+  if (lane === 2 || laneRole === 2) {
+    // If it's a dedicated support hero with very low farm roaming through mid, they are pos 4
+    if ((primaryPos === 4 || primaryPos === 5) && csPerMin < 2.5 && isRoaming) {
+      return 4;
+    }
     return 2;
   }
-  if (CARRY_HEROES.has(heroId) && !isRoaming) {
-    // If the carry is in mid lane, treat as pos 2 flex pick
-    if (lane === 2 || laneRole === 2) return 2;
+  if (primaryPos === 2 && !isRoaming && csPerMin >= 3.0) {
+    return 2;
+  }
+
+  // ── 2. Dedicated Core vs Support Farm Test ─────────────────────────────────
+  // In Dota 2, cores farm > 4.5 CS/min or > 420 GPM. Supports have < 3.0 CS/min or < 380 GPM.
+  const isHighFarm = csPerMin >= 4.2 || gpm >= 440;
+  const isLowFarm = csPerMin < 2.8 && gpm < 380;
+
+  // ── 3. Hard Carries (Pos 1) ───────────────────────────────────────────────
+  if (primaryPos === 1) {
+    // If playing an offlane or support build with low farm
+    if (lane === offLaneNum && !isHighFarm) {
+      return 3;
+    }
     return 1;
   }
-  if (MID_HEROES.has(heroId)) {
-    return 2;
+
+  // If another hero was played as safe lane carry (high farm in safe lane)
+  if (lane === safeLaneNum && isHighFarm && laneRole === 1) {
+    return 1;
   }
 
-  // ── Step 2: Use lane field (most direct indicator) ──────────────────────────
-  if (lane === 2 || laneRole === 2) {
-    return 2;
-  }
-
-  // ── Step 3: Roaming detection → Pos 4 ──────────────────────────────────────
-  if (isRoaming) {
-    return 4;
-  }
-
-  // ── Step 4: Support hero disambiguation ─────────────────────────────────────
-  if (SUPPORT_HEROES.has(heroId)) {
-    // If support is in safe lane (lane 1 for radiant, 3 for dire) with low farm → pos 5
-    // If support is roaming/off → pos 4
-    if (laneRole === 4) return 4; // jungle/roam
-    // Low farm support = pos 5
-    if (lh < 40 && gpm < 250) return 5;
-    return 4;
-  }
-
-  // ── Step 5: Lane role directly ─────────────────────────────────────────────
-  if (laneRole === 1) {
-    // Safe lane core: check if it's a carry hero or offlaner flexed to safe
-    if (OFFLANE_HEROES.has(heroId)) return 3;
-    // High farm = pos 1, lower farm = pos 3 or flex
-    return lh > 80 ? 1 : 3;
-  }
-  if (laneRole === 3) {
-    // Off lane
-    if (CARRY_HEROES.has(heroId)) return 1; // unusual but possible
+  // ── 4. Dedicated Offlaners (Pos 3) ────────────────────────────────────────
+  if (primaryPos === 3) {
+    // If an offlaner was played safe lane as carry
+    if (lane === safeLaneNum && isHighFarm) {
+      return 1;
+    }
+    // If played as support (e.g. pos 4 Slardar, Enigma, etc. with very low farm)
+    if (isLowFarm && (isRoaming || laneRole === 4)) {
+      return 4;
+    }
     return 3;
   }
-  if (laneRole === 4) return 4; // Jungle / roaming
 
-  // ── Step 6: Fallback based on farm indicators ───────────────────────────────
-  if (OFFLANE_HEROES.has(heroId)) return 3;
-  if (gpm > 500 || lh > 150) return 1; // very high farm = carry
-  if (gpm > 380 || lh > 80) return 3;  // decent farm = offlaner
-  if (lh < 30 && gpm < 280) return 5;  // very low farm = hard support
+  // ── 5. Roaming / Soft Support (Pos 4) ──────────────────────────────────────
+  if (isRoaming || laneRole === 4) {
+    return 4;
+  }
 
-  return 4; // Default: roaming support
+  // ── 6. Dedicated Supports (Pos 4 vs Pos 5) ────────────────────────────────
+  if (primaryPos === 4 || primaryPos === 5) {
+    // If the support player built carry/mid with unusually high farm
+    if (isHighFarm && csPerMin >= 5.0) {
+      if (lane === safeLaneNum) return 1;
+      if (lane === offLaneNum) return 3;
+    }
+
+    // Lane positioning for supports:
+    // Support in safe lane baby-sitting the carry = Pos 5
+    if (lane === safeLaneNum) {
+      return 5;
+    }
+    // Support in offlane pressuring the enemy carry = Pos 4
+    if (lane === offLaneNum) {
+      return 4;
+    }
+
+    // Default to primary archetype
+    return primaryPos;
+  }
+
+  // ── 7. Fallback based on Lane & Farm ───────────────────────────────────────
+  if (lane === safeLaneNum) {
+    return isHighFarm ? 1 : 5;
+  }
+  if (lane === offLaneNum) {
+    return isHighFarm ? 3 : 4;
+  }
+
+  // Farm-based fallback if lane data is missing
+  if (csPerMin >= 6.5 || gpm >= 550) return 1;
+  if (csPerMin >= 4.0 || gpm >= 420) return 3;
+  if (csPerMin < 2.0 && gpm < 320) return 5;
+
+  return primaryPos;
 }
 
 type PositionKey = 1 | 2 | 3 | 4 | 5;

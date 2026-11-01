@@ -102,8 +102,9 @@ const OFF_AURA_ITEMS = new Set([
  * Used for accurate assignment especially when matches are unparsed or lane data is missing.
  */
 export const HERO_PRIMARY_ROLE: Record<number, DotaPosition> = {
-  // Pos 1 (Hard Carries)
+  // Pos 1 (Hard Carries / Safe Lane Core)
   1: 1,   // Anti-Mage
+  4: 1,   // Bloodseeker
   6: 1,   // Drow Ranger
   8: 1,   // Juggernaut
   10: 1,  // Morphling
@@ -121,17 +122,22 @@ export const HERO_PRIMARY_ROLE: Record<number, DotaPosition> = {
   67: 1,  // Spectre
   70: 1,  // Ursa
   72: 1,  // Gyrocopter
+  73: 1,  // Alchemist
+  77: 1,  // Lycan
+  80: 1,  // Lone Druid
   81: 1,  // Chaos Knight
+  89: 1,  // Naga Siren
   93: 1,  // Slark
   94: 1,  // Medusa
   95: 1,  // Troll Warlord
   109: 1, // Terrorblade
+  113: 1, // Arc Warden
   114: 1, // Monkey King
   138: 1, // Muerta
   145: 1, // Kez
 
-  // Pos 2 (Midlaners)
-  9: 2,   // Mirana (Mid tempo / Pos 4)
+  // Pos 2 (Midlaners / Tempo Cores)
+  9: 2,   // Mirana
   11: 2,  // Shadow Fiend
   13: 2,  // Puck
   15: 2,  // Razor
@@ -143,6 +149,7 @@ export const HERO_PRIMARY_ROLE: Record<number, DotaPosition> = {
   36: 2,  // Necrophos
   39: 2,  // Queen of Pain
   43: 2,  // Death Prophet
+  45: 2,  // Pugna
   46: 2,  // Templar Assassin
   47: 2,  // Viper
   49: 2,  // Dragon Knight
@@ -152,20 +159,22 @@ export const HERO_PRIMARY_ROLE: Record<number, DotaPosition> = {
   74: 2,  // Invoker
   76: 2,  // Outworld Destroyer
   82: 2,  // Meepo
-  92: 2,  // Arc Warden
+  92: 2,  // Arc Warden (legacy ID)
   106: 2, // Ember Spirit
   120: 2, // Pangolier
   126: 2, // Void Spirit
 
-  // Pos 3 (Offlaners / Lateral Core)
+  // Pos 3 (Offlaners / Initiators / Durable Cores)
   2: 3,   // Axe
   16: 3,  // Sand King
   28: 3,  // Slardar
   29: 3,  // Tidehunter
   33: 3,  // Enigma
   38: 3,  // Beastmaster
+  53: 3,  // Nature's Prophet
   55: 3,  // Dark Seer
   60: 3,  // Night Stalker
+  61: 3,  // Broodmother
   69: 3,  // Doom
   71: 3,  // Spirit Breaker
   78: 3,  // Brewmaster
@@ -173,17 +182,20 @@ export const HERO_PRIMARY_ROLE: Record<number, DotaPosition> = {
   97: 3,  // Magnus
   98: 3,  // Timbersaw
   99: 3,  // Bristleback
+  103: 3, // Elder Titan
   104: 3, // Legion Commander
   108: 3, // Underlord
   129: 3, // Mars
   135: 3, // Dawnbreaker
   137: 3, // Primal Beast
 
-  // Pos 4 (Soft Supports / Lateral Support / Roamers)
+  // Pos 4 (Soft Supports / Roamers / Utility)
   7: 4,   // Earthshaker
   14: 4,  // Pudge
   19: 4,  // Tiny
+  20: 4,  // Vengeful Spirit
   21: 4,  // Windranger
+  40: 4,  // Venomancer
   51: 4,  // Clockwerk
   62: 4,  // Bounty Hunter
   86: 4,  // Rubick
@@ -191,11 +203,15 @@ export const HERO_PRIMARY_ROLE: Record<number, DotaPosition> = {
   100: 4, // Tusk
   105: 4, // Techies
   107: 4, // Earth Spirit
+  110: 4, // Phoenix
+  119: 4, // Dark Willow
   123: 4, // Hoodwink
+  131: 4, // Ring Master
   136: 4, // Marci
   139: 4, // Ringmaster
+  155: 4, // Largo
 
-  // Pos 5 (Hard Supports / Babysitters)
+  // Pos 5 (Hard Supports / Safe Lane Support)
   3: 5,   // Bane
   5: 5,   // Crystal Maiden
   26: 5,  // Lion
@@ -220,6 +236,7 @@ export const HERO_PRIMARY_ROLE: Record<number, DotaPosition> = {
   101: 5, // Skywrath Mage
   102: 5, // Abaddon
   111: 5, // Oracle
+  112: 5, // Winter Wyvern
   121: 5, // Grimstroke
   128: 5, // Snapfire
 };
