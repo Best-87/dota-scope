@@ -445,26 +445,56 @@ const AbilityPortrait: React.FC<{
   imgOverride?: string;
   className?: string;
 }> = ({ abilityKey, name, imgOverride, className = 'w-12 h-12' }) => {
-  const [error, setError] = useState(false);
-  const primaryUrl = imgOverride
-    ? (imgOverride.startsWith('http') ? imgOverride : `https://cdn.cloudflare.steamstatic.com${imgOverride.startsWith('/') ? '' : '/'}${imgOverride}`)
-    : getAbilityImageUrl(abilityKey);
+  const [imgSrcIndex, setImgSrcIndex] = useState(0);
+
+  // Generate candidate image URLs from highest to lowest probability of success
+  const candidateUrls = useMemo(() => {
+    const urls: string[] = [];
+    if (imgOverride) {
+      if (imgOverride.startsWith('http')) {
+        urls.push(imgOverride);
+      } else {
+        const clean = imgOverride.startsWith('/') ? imgOverride : `/${imgOverride}`;
+        urls.push(`https://cdn.cloudflare.steamstatic.com${clean}`);
+      }
+    }
+    // Standard ability CDN endpoint
+    urls.push(getAbilityImageUrl(abilityKey));
+    // Suffix _lg fallback
+    urls.push(`https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/${abilityKey}_lg.png`);
+    // Suffix _hp fallback
+    urls.push(`https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/${abilityKey}_hp.png`);
+    return [...new Set(urls)];
+  }, [abilityKey, imgOverride]);
+
+  // Reset candidate index when ability changes
+  useEffect(() => {
+    setImgSrcIndex(0);
+  }, [abilityKey, imgOverride]);
+
+  const hasImage = imgSrcIndex < candidateUrls.length;
+  const currentUrl = hasImage ? candidateUrls[imgSrcIndex] : null;
 
   return (
     <div
-      className={`relative rounded-xl overflow-hidden bg-slate-950 border border-slate-700/80 flex-shrink-0 flex items-center justify-center shadow-lg ${className}`}
+      className={`relative rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-700/80 flex-shrink-0 flex items-center justify-center shadow-lg group select-none ${className}`}
       title={name}
     >
-      {!error ? (
+      {currentUrl ? (
         <img
-          src={primaryUrl}
+          src={currentUrl}
           alt={name}
-          onError={() => setError(true)}
-          className="w-full h-full object-cover"
+          onError={() => setImgSrcIndex((prev) => prev + 1)}
+          className="w-full h-full object-cover transition-transform group-hover:scale-105"
           loading="lazy"
         />
       ) : (
-        <span className="text-xs font-bold text-sky-400">{name.slice(0, 2).toUpperCase()}</span>
+        <div className="w-full h-full flex flex-col items-center justify-center p-1 bg-gradient-to-br from-sky-950/80 via-slate-900 to-slate-950 border border-sky-500/20 text-center">
+          <Sparkles className="w-3.5 h-3.5 text-sky-400 mb-0.5" />
+          <span className="text-[10px] font-black text-sky-300 font-mono tracking-tighter line-clamp-1">
+            {name.slice(0, 3).toUpperCase()}
+          </span>
+        </div>
       )}
     </div>
   );
@@ -697,6 +727,210 @@ const ABILITY_DESC_ES: Record<string, { dname?: string; desc?: string }> = {
     dname: 'Desmembrar (Dismember)',
     desc: 'Pudge canaliza y muerde a una unidad enemiga, inmovilizándola e infligiéndole daño masivo mientras se cura a sí mismo.',
   },
+  invoker_sun_strike: {
+    dname: 'Impacto Solar (Sun Strike)',
+    desc: 'Envía un rayo catastrófico de energía solar a cualquier ubicación del mapa, infligiendo daño puro devastador distribuido entre todos los enemigos impactados.',
+  },
+  invoker_chaos_meteor: {
+    dname: 'Meteoro del Caos (Chaos Meteor)',
+    desc: 'Invoca un meteoro ardiente del espacio que rueda hacia adelante, causando daño continuo y prendiendo fuego a los enemigos.',
+  },
+  invoker_deafening_blast: {
+    dname: 'Explosión Ensordecedora (Deafening Blast)',
+    desc: 'Desata una poderosa onda sónica que empuja a todos los enemigos impactados, los aturde y les impide atacar temporalmente.',
+  },
+  sniper_shrapnel: {
+    dname: 'Metralla (Shrapnel)',
+    desc: 'Dispara una andanada de metralla sobre el área seleccionada, dañando y ralentizando continuamente a los enemigos dentro del radio.',
+  },
+  sniper_assassinate: {
+    dname: 'Asesinar (Assassinate)',
+    desc: 'Sniper apunta con calma a una unidad enemiga a gran distancia y, tras canalizar, dispara un tiro letal que inflige daño devastador.',
+  },
+  lion_impale: {
+    dname: 'Empalar (Earth Spike)',
+    desc: 'Espinas de roca brotan de la tierra en línea recta, lanzando a los enemigos por los aires, aturdiéndolos e infligiendo daño.',
+  },
+  lion_finger_of_death: {
+    dname: 'Dedo de la Muerte (Finger of Death)',
+    desc: 'Desgarra a una unidad enemiga de adentro hacia afuera, infligiendo un daño devastador que aumenta permanentemente por cada baja obtenida.',
+  },
+  tidehunter_ravage: {
+    dname: 'Devastación (Ravage)',
+    desc: 'Golpea el suelo haciendo brotar tentáculos en todas las direcciones, dañando y aturdiendo a todos los enemigos circundantes.',
+  },
+  faceless_void_chronosphere: {
+    dname: 'Cronosfera (Chronosphere)',
+    desc: 'Crea una rasgadura en el espacio-tiempo que congela a todas las unidades dentro de la esfera excepto a Faceless Void, quien gana velocidad extrema.',
+  },
+  slark_shadow_dance: {
+    dname: 'Danza de las Sombras (Shadow Dance)',
+    desc: 'Slark se oculta en una nube de sombras impenetrables, volviéndose completamente invisible y no seleccionable mientras ataca y se mueve velozmente.',
+  },
+  wraith_king_reincarnation: {
+    dname: 'Reencarnación (Reincarnation)',
+    desc: 'Al morir, Wraith King renace de entre los muertos tras un breve retraso, ralentizando a todos los enemigos cercanos.',
+  },
+  drow_ranger_marksmanship: {
+    dname: 'Puntería (Marksmanship)',
+    desc: 'Drow Ranger dispara con extrema precisión, teniendo una probabilidad de ignorar por completo la armadura base de sus objetivos.',
+  },
+  nevermore_requiem: {
+    dname: 'Réquiem de las Almas (Requiem of Souls)',
+    desc: 'Shadow Fiend libera todas las almas capturadas en líneas de energía espiritual que dañan, aterrorizan y ralentizan a los enemigos.',
+  },
+  witch_doctor_death_ward: {
+    dname: 'Guardián de la Muerte (Death Ward)',
+    desc: 'Canaliza para invocar un letal guardián vudú que dispara proyectiles fulminantes a gran velocidad hacia los héroes enemigos.',
+  },
+  earthshaker_echo_slam: {
+    dname: 'Golpe Resonante (Echo Slam)',
+    desc: 'Ondas de choque viajan a través del suelo, dañando a los enemigos. Cada unidad golpeada genera ecos adicionales que dañan a las unidades cercanas.',
+  },
+};
+
+/**
+ * Motor de traducción inteligente de inglés a español para descripciones
+ * de habilidades, cetros y fragmentos de Aghanim de Dota 2.
+ */
+export const translateAbilityText = (text: string): string => {
+  if (!text) return '';
+  let res = text;
+
+  const phraseReplacements: [RegExp, string][] = [
+    [/Passively grants bonus/gi, 'Otorga pasivamente una bonificación de'],
+    [/Passively grants/gi, 'Otorga pasivamente'],
+    [/Passively increases/gi, 'Aumenta pasivamente'],
+    [/Passively provides/gi, 'Proporciona pasivamente'],
+    [/Passively creates/gi, 'Crea pasivamente'],
+    [/Passively reduces/gi, 'Reduce pasivamente'],
+    [/Channels to summon/gi, 'Canaliza para invocar'],
+    [/Channels to/gi, 'Canaliza para'],
+    [/Channeled:/gi, 'Canalizado:'],
+    [/Allows manipulation of/gi, 'Permite manipular'],
+    [/Combines the properties of/gi, 'Combina las propiedades de'],
+    [/Sends a catastrophic ray of fierce energy/gi, 'Envía un rayo catastrófico de energía feroz'],
+    [/Sends a/gi, 'Envía un/a'],
+    [/Fires a deadly blast of energy/gi, 'Dispara una ráfaga mortal de energía'],
+    [/Fires a/gi, 'Dispara un/a'],
+    [/Discharges a/gi, 'Descarga un/a'],
+    [/Creates illusions of the caster/gi, 'Crea ilusiones del héroe'],
+    [/Creates illusions of/gi, 'Crea ilusiones de'],
+    [/Creates an illusion of/gi, 'Crea una ilusión de'],
+    [/Creates a/gi, 'Crea un/a'],
+    [/Summons a/gi, 'Invoca un/a'],
+    [/Summons/gi, 'Invoca'],
+    [/Teleports the hero to/gi, 'Teletransporta al héroe a'],
+    [/Teleports to/gi, 'Se teletransporta a'],
+    [/Stuns the target enemy/gi, 'Aturde al enemigo objetivo'],
+    [/Stuns the target/gi, 'Aturde al objetivo'],
+    [/Stuns target/gi, 'Aturde al objetivo'],
+    [/Stuns and damages/gi, 'Aturde y daña'],
+    [/Stuns enemies/gi, 'Aturde a los enemigos'],
+    [/Stuns all/gi, 'Aturde a todos'],
+    [/Stuns/gi, 'Aturde'],
+    [/Silences the target/gi, 'Silencia al objetivo'],
+    [/Silences enemies/gi, 'Silencia a los enemigos'],
+    [/Silences/gi, 'Silencia'],
+    [/Slows enemy movement speed/gi, 'Ralentiza la velocidad de movimiento enemiga'],
+    [/Slows movement speed/gi, 'Ralentiza la velocidad de movimiento'],
+    [/Slows and damages/gi, 'Ralentiza y daña'],
+    [/Slows enemies/gi, 'Ralentiza a los enemigos'],
+    [/Slows/gi, 'Ralentiza'],
+    [/Deals damage equal to/gi, 'Inflige daño equivalente a'],
+    [/Deals damage based on/gi, 'Inflige daño basado en'],
+    [/Deals damage to/gi, 'Inflige daño a'],
+    [/Deals bonus damage/gi, 'Inflige daño adicional'],
+    [/Deals pure damage/gi, 'Inflige daño puro'],
+    [/Deals magical damage/gi, 'Inflige daño mágico'],
+    [/Deals physical damage/gi, 'Inflige daño físico'],
+    [/Deals massive/gi, 'Inflige un daño masivo'],
+    [/Deals/gi, 'Inflige'],
+    [/Active instances imbue/gi, 'Las instancias activas imbuyen a'],
+    [/Active instances/gi, 'Instancias activas'],
+    [/bonus health regeneration/gi, 'regeneración de vida adicional'],
+    [/bonus movement speed/gi, 'velocidad de movimiento adicional'],
+    [/bonus attack speed/gi, 'velocidad de ataque adicional'],
+    [/bonus attack range/gi, 'alcance de ataque adicional'],
+    [/bonus damage/gi, 'daño adicional'],
+    [/bonus armor/gi, 'armadura adicional'],
+    [/bonus strength/gi, 'fuerza adicional'],
+    [/bonus agility/gi, 'agilidad adicional'],
+    [/bonus intelligence/gi, 'inteligencia adicional'],
+    [/allied units/gi, 'unidades aliadas'],
+    [/allied heroes/gi, 'héroes aliados'],
+    [/allies/gi, 'aliados'],
+    [/enemy heroes/gi, 'héroes enemigos'],
+    [/enemy units/gi, 'unidades enemigas'],
+    [/enemies/gi, 'enemigos'],
+    [/targeted location/gi, 'ubicación objetivo'],
+    [/targeted unit/gi, 'unidad objetivo'],
+    [/target unit/gi, 'unidad objetivo'],
+    [/target location/gi, 'ubicación objetivo'],
+    [/target enemy/gi, 'enemigo objetivo'],
+    [/target/gi, 'objetivo'],
+    [/within radius/gi, 'dentro del radio'],
+    [/in an area around/gi, 'en un área alrededor de'],
+    [/in an area/gi, 'en un área'],
+    [/in a line/gi, 'en una línea'],
+    [/in front of/gi, 'frente a'],
+    [/for a duration of/gi, 'durante'],
+    [/for a duration/gi, 'durante un tiempo'],
+    [/for (\d+(\.\d+)?) seconds/gi, 'durante $1 segundos'],
+    [/for (\d+) second/gi, 'durante $1 segundo'],
+    [/seconds/gi, 'segundos'],
+    [/second/gi, 'segundo'],
+    [/physical damage/gi, 'daño físico'],
+    [/magical damage/gi, 'daño mágico'],
+    [/pure damage/gi, 'daño puro'],
+    [/pierces spell immunity/gi, 'atraviesa inmunidad a hechizos'],
+    [/cannot be dispelled/gi, 'no se puede disipar'],
+    [/can be dispelled/gi, 'se puede disipar'],
+    [/dispel type:/gi, 'tipo de disipación:'],
+    [/strong dispel/gi, 'disipación fuerte'],
+    [/basic dispel/gi, 'disipación básica'],
+    [/cooldown/gi, 'tiempo de recarga'],
+    [/mana cost/gi, 'coste de maná'],
+    [/health cost/gi, 'coste de vida'],
+    [/cast range/gi, 'alcance de lanzamiento'],
+    [/movement speed/gi, 'velocidad de movimiento'],
+    [/attack speed/gi, 'velocidad de ataque'],
+    [/attack range/gi, 'alcance de ataque'],
+    [/magic resistance/gi, 'resistencia mágica'],
+    [/armor reduction/gi, 'reducción de armadura'],
+    [/health regeneration/gi, 'regeneración de vida'],
+    [/mana regeneration/gi, 'regeneración de maná'],
+    [/max health/gi, 'vida máxima'],
+    [/maximum health/gi, 'vida máxima'],
+    [/current health/gi, 'vida actual'],
+    [/missing health/gi, 'vida faltante'],
+    [/max mana/gi, 'maná máximo'],
+    [/current mana/gi, 'maná actual'],
+    [/missing mana/gi, 'maná faltante'],
+    [/critical strike/gi, 'golpe crítico'],
+    [/lifesteal/gi, 'robo de vida'],
+    [/spell lifesteal/gi, 'robo de vida por hechizo'],
+    [/true strike/gi, 'golpe certero (True Strike)'],
+    [/invulnerable/gi, 'invulnerable'],
+    [/invisible/gi, 'invisible'],
+    [/invisibility/gi, 'invisibilidad'],
+    [/magic immune/gi, 'inmune a magia'],
+    [/spell immune/gi, 'inmune a hechizos'],
+    [/amplifies/gi, 'amplifica'],
+    [/amplified/gi, 'amplificado'],
+    [/reduces/gi, 'reduce'],
+    [/reduced/gi, 'reducido'],
+    [/increases/gi, 'aumenta'],
+    [/increased/gi, 'aumentado'],
+    [/restores/gi, 'restaura'],
+    [/heals/gi, 'cura'],
+    [/prevents/gi, 'evita'],
+  ];
+
+  for (const [pattern, repl] of phraseReplacements) {
+    res = res.replace(pattern, repl);
+  }
+  return res;
 };
 
 const translateBehavior = (b: string): string => {
@@ -725,7 +959,19 @@ const AbilitiesSection: React.FC<AbilitiesSectionProps> = ({
   // If mapping gave no keys, dynamically find matching keys in abilities dictionary
   const resolvedKeys = useMemo(() => {
     if (abilityKeys && abilityKeys.length > 0) {
-      return abilityKeys.filter((key) => {
+      // Flatten in case an entry is an array (e.g. Monkey King's untransform / transfiguration)
+      const flattened: string[] = [];
+      const stack = [...abilityKeys];
+      while (stack.length > 0) {
+        const item = stack.shift();
+        if (Array.isArray(item)) {
+          stack.unshift(...item);
+        } else if (typeof item === 'string' && item) {
+          flattened.push(item);
+        }
+      }
+
+      return flattened.filter((key) => {
         // filter out empty / generic / talent keys
         if (!key || key.startsWith('special_bonus_') || key === 'generic_hidden') return false;
         return true;
@@ -770,7 +1016,8 @@ const AbilitiesSection: React.FC<AbilitiesSectionProps> = ({
             const ab = abilitiesDict[key] || {};
             const spanishOverride = ABILITY_DESC_ES[key];
             const dname = spanishOverride?.dname || ab.dname || key.replace(/_/g, ' ');
-            const desc = spanishOverride?.desc || ab.desc || 'Sin descripción disponible para esta habilidad.';
+            const rawDesc = spanishOverride?.desc || ab.desc || '';
+            const desc = rawDesc ? translateAbilityText(rawDesc) : 'Sin descripción disponible para esta habilidad.';
             const cd = formatList(ab.cd);
             const mc = formatList(ab.mc || ab.cost);
             const rawBehavior = Array.isArray(ab.behavior)
@@ -781,8 +1028,10 @@ const AbilitiesSection: React.FC<AbilitiesSectionProps> = ({
             const bkbPierce = ab.bkbpierce;
 
             // Aghanim upgrades
-            const scepterDesc = ab.scepter_desc || ab.aghanims_scepter_desc;
-            const shardDesc = ab.shard_desc || ab.aghanims_shard_desc;
+            const rawScepterDesc = ab.scepter_desc || ab.aghanims_scepter_desc;
+            const scepterDesc = rawScepterDesc ? translateAbilityText(rawScepterDesc) : null;
+            const rawShardDesc = ab.shard_desc || ab.aghanims_shard_desc;
+            const shardDesc = rawShardDesc ? translateAbilityText(rawShardDesc) : null;
 
             return (
               <div
@@ -1306,6 +1555,62 @@ const CountersAndAllies: React.FC<CountersAndAlliesProps> = ({ heroId, heroesDic
   );
 };
 
+// ─── ERROR BOUNDARY TO PREVENT BLACK SCREEN CRASHES ──────────────────────────
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  onBack: () => void;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class HeroDetailErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('[DotaScope] Error in HeroDetailView:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 rounded-3xl bg-slate-900 border border-red-500/30 text-center space-y-4 shadow-2xl">
+          <div className="w-12 h-12 mx-auto rounded-full bg-red-600/20 text-red-500 flex items-center justify-center border border-red-500/30">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white">Hubo un problema al cargar los detalles de este héroe</h3>
+            <p className="text-xs text-gray-400 mt-1">
+              Ocurrió un error inesperado al procesar las estadísticas. Puedes regresar a la lista de héroes de manera segura.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              this.setState({ hasError: false });
+              this.props.onBack();
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/30 transition text-sm font-semibold"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Volver al Catálogo de Héroes</span>
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // ─── HERO DETAIL VIEW COMPONENT ───────────────────────────────────────────────
 
 interface HeroDetailViewProps {
@@ -1327,15 +1632,15 @@ const HeroDetailView: React.FC<HeroDetailViewProps> = ({
   itemsDict,
   itemIdsDict,
 }) => {
-  const heroKey = getHeroCdnKey(hero.name);
-  const nameEn = hero.localized_name || hero.name;
+  const heroKey = getHeroCdnKey(hero.name || '');
+  const nameEn = hero.localized_name || hero.name || 'Héroe Desconocido';
   const nameEs = getHeroSpanishName(nameEn, heroKey);
 
-  const attrConfig =
-    ATTRIBUTE_CONFIG[hero.primary_attr as keyof typeof ATTRIBUTE_CONFIG] || ATTRIBUTE_CONFIG.str;
+  const primaryAttr = (hero.primary_attr as keyof typeof ATTRIBUTE_CONFIG) || 'str';
+  const attrConfig = ATTRIBUTE_CONFIG[primaryAttr] || ATTRIBUTE_CONFIG.str;
   const AttrIcon = attrConfig.icon;
 
-  // Base Stats Calculations
+  // Base Stats Calculations (with defensive fallbacks)
   const baseHealth = (hero.base_health || 120) + (hero.base_str || 0) * 22;
   const healthRegen = (hero.base_health_regen || 0) + (hero.base_str || 0) * 0.1;
   const baseMana = (hero.base_mana || 75) + (hero.base_int || 0) * 12;
@@ -1355,7 +1660,7 @@ const HeroDetailView: React.FC<HeroDetailViewProps> = ({
   const attackMin = (hero.base_attack_min || 0) + primaryBonus;
   const attackMax = (hero.base_attack_max || 0) + primaryBonus;
 
-  // Abilities mapping from constants
+  // Abilities mapping from constants with defensive fallbacks
   const mapping = heroAbilitiesDict[hero.name] || heroAbilitiesDict[heroKey];
   const abilityKeys = mapping?.abilities || [];
   const talents = mapping?.talents || [];
@@ -1425,9 +1730,9 @@ const HeroDetailView: React.FC<HeroDetailViewProps> = ({
               Nombre oficial en inglés: <span className="text-gray-200 font-semibold">{nameEn}</span>
             </p>
 
-            {/* Roles Chips */}
+            {/* Roles Chips (safeguarded against undefined roles) */}
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 pt-2">
-              {hero.roles.map((role) => (
+              {(hero.roles || []).map((role) => (
                 <span
                   key={role}
                   className="px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-slate-950/80 text-gray-300 border border-slate-800"
@@ -1599,7 +1904,7 @@ const HeroDetailView: React.FC<HeroDetailViewProps> = ({
             <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
               <span className="text-xs text-gray-400">Velocidad de Giro (Turn Rate):</span>
               <span className="text-sm font-bold font-mono text-gray-300">
-                {hero.turn_rate ? hero.turn_rate.toFixed(1) : '0.6'}
+                {typeof hero.turn_rate === 'number' ? hero.turn_rate.toFixed(1) : (hero.turn_rate || '0.6')}
               </span>
             </div>
           </div>
@@ -1813,17 +2118,19 @@ export const HeroEncyclopediaPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* If a hero is selected, render the Hero Detail View */}
+      {/* If a hero is selected, render the Hero Detail View safely */}
       {selectedHero ? (
-        <HeroDetailView
-          hero={selectedHero}
-          onBack={() => setSelectedHeroId(null)}
-          heroesDict={heroes}
-          abilitiesDict={abilitiesDict}
-          heroAbilitiesDict={heroAbilitiesDict}
-          itemsDict={itemsDict}
-          itemIdsDict={itemIdsDict}
-        />
+        <HeroDetailErrorBoundary onBack={() => setSelectedHeroId(null)}>
+          <HeroDetailView
+            hero={selectedHero}
+            onBack={() => setSelectedHeroId(null)}
+            heroesDict={heroes}
+            abilitiesDict={abilitiesDict}
+            heroAbilitiesDict={heroAbilitiesDict}
+            itemsDict={itemsDict}
+            itemIdsDict={itemIdsDict}
+          />
+        </HeroDetailErrorBoundary>
       ) : (
         /* Otherwise render the Grid View */
         <div className="space-y-6">
