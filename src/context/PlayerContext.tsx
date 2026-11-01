@@ -10,6 +10,49 @@ import React, {
 import { getPlayer } from '../api/opendota';
 import type { Player } from '../api/types';
 
+// ─── Player History ────────────────────────────────────────────────────────────
+export interface PlayerHistoryEntry {
+  accountId: number;
+  personaname: string;
+  avatarfull: string;
+  lastSeen: number; // Unix timestamp ms
+}
+
+const STORAGE_KEY = 'dotascope_account_id';
+const HISTORY_KEY = 'dota_player_history';
+const MAX_HISTORY = 5;
+
+function loadHistory(): PlayerHistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed as PlayerHistoryEntry[];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(history: PlayerHistoryEntry[]): void {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+function addToHistory(
+  history: PlayerHistoryEntry[],
+  entry: PlayerHistoryEntry
+): PlayerHistoryEntry[] {
+  // Remove existing entry for same account, push newest to front
+  const filtered = history.filter((h) => h.accountId !== entry.accountId);
+  const updated = [entry, ...filtered].slice(0, MAX_HISTORY);
+  return updated;
+}
+
+// ─── Context Shape ─────────────────────────────────────────────────────────────
 export interface PlayerContextValue {
   accountId: number | null;
   account_id: number | null;
@@ -19,6 +62,9 @@ export interface PlayerContextValue {
   setAccountId: (id: number) => void;
   refetchPlayer: () => Promise<void>;
   refreshPlayer: () => Promise<void>;
+  // History
+  playerHistory: PlayerHistoryEntry[];
+  clearHistory: () => void;
 }
 
 export const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
@@ -27,8 +73,6 @@ export interface PlayerProviderProps {
   children: ReactNode;
   initialAccountId?: number;
 }
-
-const STORAGE_KEY = 'dotascope_account_id';
 
 export const PlayerProvider: React.FC<PlayerProviderProps> = ({
   children,
@@ -48,14 +92,25 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     }
     return null;
   });
+
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
+  const [playerHistory, setPlayerHistory] = useState<PlayerHistoryEntry[]>(() => loadHistory());
 
   const setAccountId = useCallback((id: number) => {
     setAccountIdState(id);
     try {
       localStorage.setItem(STORAGE_KEY, String(id));
+    } catch {
+      // Ignore storage errors
+    }
+  }, []);
+
+  const clearHistory = useCallback(() => {
+    setPlayerHistory([]);
+    try {
+      localStorage.removeItem(HISTORY_KEY);
     } catch {
       // Ignore storage errors
     }
@@ -74,6 +129,22 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
     try {
       const data = await getPlayer(accountId);
       setPlayer(data);
+      // Update history once we have the profile data
+      const personaname =
+        (data as any)?.profile?.personaname || (data as any)?.personaname || `ID ${accountId}`;
+      const avatarfull =
+        (data as any)?.profile?.avatarfull || (data as any)?.avatarfull || '';
+      const newEntry: PlayerHistoryEntry = {
+        accountId,
+        personaname,
+        avatarfull,
+        lastSeen: Date.now(),
+      };
+      setPlayerHistory((prev) => {
+        const updated = addToHistory(prev, newEntry);
+        saveHistory(updated);
+        return updated;
+      });
     } catch (err: unknown) {
       const formattedError =
         err instanceof Error ? err : new Error(String(err) || 'Failed to fetch player profile');
@@ -102,6 +173,22 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
         if (active) {
           setPlayer(data);
           setLoading(false);
+          // Save to history
+          const personaname =
+            (data as any)?.profile?.personaname || (data as any)?.personaname || `ID ${accountId}`;
+          const avatarfull =
+            (data as any)?.profile?.avatarfull || (data as any)?.avatarfull || '';
+          const newEntry: PlayerHistoryEntry = {
+            accountId,
+            personaname,
+            avatarfull,
+            lastSeen: Date.now(),
+          };
+          setPlayerHistory((prev) => {
+            const updated = addToHistory(prev, newEntry);
+            saveHistory(updated);
+            return updated;
+          });
         }
       })
       .catch((err: unknown) => {
@@ -129,8 +216,10 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({
       setAccountId,
       refetchPlayer,
       refreshPlayer: refetchPlayer,
+      playerHistory,
+      clearHistory,
     }),
-    [accountId, player, loading, error, setAccountId, refetchPlayer]
+    [accountId, player, loading, error, setAccountId, refetchPlayer, playerHistory, clearHistory]
   );
 
   return (

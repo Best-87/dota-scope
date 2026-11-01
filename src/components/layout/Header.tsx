@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, Swords, User, RefreshCw, Download } from 'lucide-react';
+import { Search, User, RefreshCw, Download, Clock, ChevronDown } from 'lucide-react';
 import { usePlayerContext } from '../../context/PlayerContext';
 import { parsePlayerId } from '../../utils/steamId';
 import { getRankName } from '../../utils/formatting';
@@ -8,9 +8,22 @@ import { usePwaInstall } from '../../hooks/usePwaInstall';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
-  const { player, accountId, loading, setAccountId, refetchPlayer } = usePlayerContext();
+  const { player, accountId, loading, setAccountId, refetchPlayer, playerHistory } = usePlayerContext();
   const { isInstallable, installApp } = usePwaInstall();
   const [searchInput, setSearchInput] = useState('');
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const historyRef = useRef<HTMLDivElement>(null);
+
+  // Close history dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (historyRef.current && !historyRef.current.contains(e.target as Node)) {
+        setHistoryOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,9 +41,18 @@ export const Header: React.FC = () => {
     setSearchInput('');
   };
 
+  const handleSelectHistory = (id: number) => {
+    setAccountId(id);
+    setHistoryOpen(false);
+    navigate(`/dashboard/${id}`);
+  };
+
   const rankName = player?.rank_tier ? getRankName(player.rank_tier) : null;
   const personaname = player?.profile?.personaname || player?.personaname;
   const avatar = player?.profile?.avatarfull || player?.avatarfull;
+
+  // History entries excluding current player
+  const otherHistory = playerHistory.filter((h) => h.accountId !== accountId);
 
   return (
     <header className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-6 py-3">
@@ -82,8 +104,10 @@ export const Header: React.FC = () => {
               <span className="hidden sm:inline">Instalar App</span>
             </button>
           )}
+
           {accountId && player ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2" ref={historyRef}>
+              {/* Refresh button */}
               <button
                 onClick={() => refetchPlayer()}
                 disabled={loading}
@@ -93,32 +117,90 @@ export const Header: React.FC = () => {
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-red-400' : ''}`} />
               </button>
 
-              <Link
-                to={`/dashboard/${accountId}`}
-                className="flex items-center gap-2.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 rounded-lg p-1.5 pr-3 transition"
-              >
-                {avatar ? (
-                  <img
-                    src={avatar}
-                    alt={personaname || 'Player'}
-                    className="w-7 h-7 rounded-md object-cover border border-slate-700"
-                  />
-                ) : (
-                  <div className="w-7 h-7 rounded-md bg-slate-800 flex items-center justify-center text-gray-400">
-                    <User className="w-4 h-4" />
+              {/* Player card + history dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setHistoryOpen((v) => !v)}
+                  className="flex items-center gap-2.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 rounded-lg p-1.5 pr-2 transition"
+                >
+                  {avatar ? (
+                    <img
+                      src={avatar}
+                      alt={personaname || 'Player'}
+                      className="w-7 h-7 rounded-md object-cover border border-slate-700"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-md bg-slate-800 flex items-center justify-center text-gray-400">
+                      <User className="w-4 h-4" />
+                    </div>
+                  )}
+                  <div className="flex flex-col text-left">
+                    <span className="text-xs font-semibold text-gray-200 max-w-[100px] truncate leading-tight">
+                      {personaname || `ID ${accountId}`}
+                    </span>
+                    {rankName && (
+                      <span className="text-[10px] text-amber-400/90 leading-tight">
+                        {rankName}
+                      </span>
+                    )}
+                  </div>
+                  {otherHistory.length > 0 && (
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-gray-500 transition-transform ${historyOpen ? 'rotate-180' : ''}`}
+                    />
+                  )}
+                </button>
+
+                {/* History dropdown */}
+                {historyOpen && otherHistory.length > 0 && (
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-slate-950 border border-slate-800 rounded-xl shadow-2xl overflow-hidden z-50">
+                    <div className="px-3 py-2 border-b border-slate-800">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold uppercase tracking-wider">
+                        <Clock className="w-3 h-3" />
+                        Cambiar jugador
+                      </div>
+                    </div>
+                    <div className="py-1">
+                      {otherHistory.map((entry) => (
+                        <button
+                          key={entry.accountId}
+                          onClick={() => handleSelectHistory(entry.accountId)}
+                          className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-slate-800/80 transition text-left"
+                        >
+                          {entry.avatarfull ? (
+                            <img
+                              src={entry.avatarfull}
+                              alt={entry.personaname}
+                              className="w-7 h-7 rounded-md object-cover border border-slate-700 flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-7 h-7 rounded-md bg-slate-800 flex items-center justify-center text-gray-500 flex-shrink-0">
+                              <User className="w-3.5 h-3.5" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-semibold text-gray-200 truncate">
+                              {entry.personaname}
+                            </div>
+                            <div className="text-[10px] text-gray-500 font-mono">
+                              ID: {entry.accountId}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="px-3 py-2 border-t border-slate-800">
+                      <Link
+                        to="/search"
+                        onClick={() => setHistoryOpen(false)}
+                        className="block w-full text-center text-xs text-red-400 hover:text-red-300 font-semibold transition"
+                      >
+                        Buscar otro jugador →
+                      </Link>
+                    </div>
                   </div>
                 )}
-                <div className="flex flex-col text-left">
-                  <span className="text-xs font-semibold text-gray-200 max-w-[120px] truncate leading-tight">
-                    {personaname || `ID ${accountId}`}
-                  </span>
-                  {rankName && (
-                    <span className="text-[10px] text-amber-400/90 leading-tight">
-                      {rankName}
-                    </span>
-                  )}
-                </div>
-              </Link>
+              </div>
             </div>
           ) : (
             <Link
