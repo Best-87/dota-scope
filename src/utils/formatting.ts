@@ -123,6 +123,33 @@ export function getRankName(rankTier?: number | null): string {
 }
 
 /**
+ * Estimates MMR from Dota 2 rank tier.
+ * Herald 1 = ~150 MMR, each star ~150-160 MMR.
+ * Rank tier: 11 (Herald 1) up to 80 (Immortal ~5620+).
+ */
+export function estimateMmrFromRank(rankTier?: number | null): number | null {
+  if (!rankTier || rankTier <= 0) return null;
+  const tier = Math.floor(rankTier / 10);
+  const stars = Math.max(1, Math.min(5, rankTier % 10));
+
+  if (tier >= 8) return 5620; // Immortal baseline
+
+  // Base MMR per medal
+  const tierBaseMmr: Record<number, number> = {
+    1: 0,     // Herald
+    2: 770,   // Guardian
+    3: 1540,  // Crusader
+    4: 2310,  // Archon
+    5: 3080,  // Legend
+    6: 3850,  // Ancient
+    7: 4620,  // Divine
+  };
+
+  const base = tierBaseMmr[tier] ?? 0;
+  return base + (stars - 1) * 154 + 75;
+}
+
+/**
  * Returns human-readable game mode name.
  * Example: 22 -> "Ranked All Pick", 23 -> "Turbo"
  */

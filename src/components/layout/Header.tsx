@@ -78,16 +78,16 @@ export const Header: React.FC = () => {
         </Link>
 
         {/* Global Search Bar */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-md mx-2">
+        <form onSubmit={handleSearch} className="flex-1 max-w-md mx-1 sm:mx-2">
           <div className="relative">
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Buscar por Steam ID, Friend ID o Nombre..."
-              className="w-full bg-slate-900/90 border border-slate-700/70 rounded-lg pl-9 pr-4 py-1.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/40 transition-all"
+              placeholder="Buscar Steam ID o Nombre..."
+              className="w-full bg-slate-900/90 border border-slate-700/70 rounded-lg pl-8 sm:pl-9 pr-3 sm:pr-4 py-1.5 text-xs sm:text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/40 transition-all"
             />
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 absolute left-2.5 sm:left-3 top-2.5 pointer-events-none" />
           </div>
         </form>
 

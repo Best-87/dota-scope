@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Outlet, useParams } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import MobileNav from './MobileNav';
 import { usePlayerContext } from '../../context/PlayerContext';
 
 export const Layout: React.FC = () => {
@@ -22,10 +23,11 @@ export const Layout: React.FC = () => {
       <Header />
       <div className="flex-1 flex w-full max-w-[1600px] mx-auto">
         <Sidebar />
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden">
+        <main className="flex-1 p-3.5 sm:p-6 lg:p-8 overflow-x-hidden pb-20 sm:pb-8">
           <Outlet />
         </main>
       </div>
+      <MobileNav />
     </div>
   );
 };

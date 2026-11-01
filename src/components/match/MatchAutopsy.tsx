@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
   Flame,
@@ -343,7 +344,19 @@ export const MatchAutopsy: React.FC<MatchAutopsyProps> = ({ match, focusAccountI
                     <span className="text-xs font-bold px-2 py-0.5 rounded bg-slate-800 text-red-400 font-mono">Posición {activeRoleEval.position}</span>
                     <h4 className="text-base font-bold text-white">{activeRoleEval.positionName} — {getHeroName(activeRoleEval.heroId)}</h4>
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">Jugador: <strong className="text-gray-200">{activeRoleEval.playerName}</strong></div>
+                  <div className="text-xs text-gray-400 mt-1 flex items-center gap-1.5">
+                    <span>Jugador:</span>
+                    {activeRoleEval.accountId ? (
+                      <Link
+                        to={`/dashboard/${activeRoleEval.accountId}`}
+                        className="text-red-400 hover:text-red-300 font-bold underline transition"
+                      >
+                        {activeRoleEval.playerName}
+                      </Link>
+                    ) : (
+                      <strong className="text-gray-200">{activeRoleEval.playerName}</strong>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">

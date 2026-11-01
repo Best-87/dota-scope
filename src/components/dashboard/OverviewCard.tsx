@@ -1,7 +1,6 @@
-import React from 'react';
-import { Trophy, Swords, Shield, Activity, Target } from 'lucide-react';
+import { Trophy, Swords, Shield, Activity, Target, Zap } from 'lucide-react';
 import type { Player, WinLoss, PlayerTotal } from '../../api/types';
-import { getRankName } from '../../utils/formatting';
+import { getRankName, estimateMmrFromRank } from '../../utils/formatting';
 import { RANK_COLORS } from '../../utils/constants';
 
 interface OverviewCardProps {
@@ -107,11 +106,17 @@ export const OverviewCard: React.FC<OverviewCardProps> = ({
                 </span>
               )}
 
-              {player?.mmr_estimate?.estimate && (
-                <span className="text-xs text-gray-400 font-mono">
-                  MMR Est: ~{player.mmr_estimate.estimate}
-                </span>
-              )}
+              {/* MMR Display - either official estimate or calculated from rank tier */}
+              {(() => {
+                const mmrVal = player?.mmr_estimate?.estimate || estimateMmrFromRank(player?.rank_tier);
+                if (!mmrVal) return null;
+                return (
+                  <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-red-600/20 text-red-400 border border-red-500/30 flex items-center gap-1 shadow-sm">
+                    <Zap className="w-3 h-3 text-amber-400" />
+                    <span>MMR: ~{mmrVal.toLocaleString()}</span>
+                  </span>
+                );
+              })()}
             </div>
           </div>
         </div>

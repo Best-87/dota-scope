@@ -9,6 +9,7 @@ export interface RoleEvaluation {
   heroId: number;
   playerName: string;
   playerSlot: number;
+  accountId?: number;
   grade: 'S' | 'A' | 'B' | 'C' | 'D' | 'F';
   score: number; // 0 - 100
   summary: string;
@@ -577,6 +578,7 @@ export function analyzeMatchLoss(
       heroId: p1.hero_id,
       playerName: p1.personaname || 'Carry (HC)',
       playerSlot: p1.player_slot,
+      accountId: p1.account_id,
       grade: getGrade(score),
       score,
       summary: mistakes.length > 0 ? mistakes[0] : 'Desempeño sólido en farmeo y daño sostenido.',
@@ -657,6 +659,7 @@ export function analyzeMatchLoss(
       heroId: p2.hero_id,
       playerName: p2.personaname || 'Midlaner',
       playerSlot: p2.player_slot,
+      accountId: p2.account_id,
       grade: getGrade(score),
       score,
       summary: mistakes.length > 0 ? mistakes[0] : 'Control de carril central y rotaciones consistentes.',
@@ -723,6 +726,7 @@ export function analyzeMatchLoss(
       heroId: p3.hero_id,
       playerName: p3.personaname || 'Offlaner (Lateral)',
       playerSlot: p3.player_slot,
+      accountId: p3.account_id,
       grade: getGrade(score),
       score,
       summary: mistakes.length > 0 ? mistakes[0] : 'Frontline sólida e iniciaciones oportunas.',
@@ -778,6 +782,7 @@ export function analyzeMatchLoss(
       heroId: p4.hero_id,
       playerName: p4.personaname || 'Support 4',
       playerSlot: p4.player_slot,
+      accountId: p4.account_id,
       grade: getGrade(score),
       score,
       summary: mistakes.length > 0 ? mistakes[0] : 'Buen impacto de combate y soporte ofensivo.',
@@ -876,6 +881,7 @@ export function analyzeMatchLoss(
       heroId: p5.hero_id,
       playerName: p5.personaname || 'Support 5',
       playerSlot: p5.player_slot,
+      accountId: p5.account_id,
       grade: getGrade(score),
       score,
       summary: mistakes.length > 0 ? mistakes[0] : 'Protección de cores y soporte efectivo.',

@@ -51,7 +51,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-16 md:w-60 bg-slate-950/70 border-r border-slate-800/80 flex flex-col py-4 px-2 md:px-3 flex-shrink-0 min-h-[calc(100vh-57px)]">
+    <aside className="hidden sm:flex w-16 md:w-60 bg-slate-950/70 border-r border-slate-800/80 flex-col py-4 px-2 md:px-3 flex-shrink-0 min-h-[calc(100vh-57px)]">
       <div className="space-y-5 flex-1 overflow-y-auto">
         {sections.map((section) => (
           <div key={section.label}>
