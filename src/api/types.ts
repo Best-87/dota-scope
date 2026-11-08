@@ -129,6 +129,8 @@ export interface MatchPlayer extends RecentMatch {
   // Time-series & upgrades
   gold_t?: number[];
   xp_t?: number[];
+  lh_t?: number[];
+  dn_t?: number[];
   purchase_log?: PurchaseEvent[];
   ability_upgrades_arr?: number[];
   ability_upgrades?: AbilityUpgrade[];

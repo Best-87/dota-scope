@@ -36,6 +36,125 @@ export interface RawItemAttribute {
   header?: string;
   value?: string | string[];
   footer?: string;
+  display?: string;
+}
+
+const ATTRIB_DICTIONARY_ES: Record<string, string> = {
+  bonus_armor: 'Armadura',
+  armor: 'Armadura',
+  bonus_health_regen: 'Regeneración de Vida',
+  hp_regen: 'Regen. Máx. de Vida',
+  health_regen: 'Regeneración de Vida',
+  bonus_mana_regen: 'Regeneración de Maná',
+  mana_regen: 'Regeneración de Maná',
+  bonus_mana: 'Maná',
+  mana: 'Maná',
+  bonus_health: 'Vida',
+  health: 'Vida',
+  bonus_strength: 'Fuerza',
+  strength: 'Fuerza',
+  bonus_agility: 'Agilidad',
+  agility: 'Agilidad',
+  bonus_intellect: 'Inteligencia',
+  intellect: 'Inteligencia',
+  bonus_all_stats: 'Todos los Atributos',
+  all_stats: 'Todos los Atributos',
+  bonus_damage: 'Daño',
+  damage_bonus: 'Daño',
+  damage: 'Daño',
+  bonus_attack_speed: 'Velocidad de Ataque',
+  attack_speed: 'Velocidad de Ataque',
+  bonus_movement_speed: 'Velocidad de Movimiento',
+  bonus_movement: 'Velocidad de Movimiento',
+  movement_speed: 'Velocidad de Movimiento',
+  bonus_magical_armor: 'Resistencia Mágica',
+  magic_resistance: 'Resistencia Mágica',
+  bonus_spell_amp: 'Amplificación de Hechizo',
+  spell_amp: 'Amplificación de Hechizo',
+  cast_range_bonus: 'Rango de Lanzamiento',
+  bonus_cast_range: 'Rango de Lanzamiento',
+  bonus_range: 'Rango de Ataque',
+  lifesteal_percent: 'Robo de Vida',
+  spell_lifesteal: 'Robo de Vida por Hechizo',
+  bonus_evasion: 'Evasión',
+  evasion: 'Evasión',
+  active_duration: 'Duración Activa (seg)',
+  duration: 'Duración (seg)',
+  cooldown: 'Tiempo de Recarga (seg)',
+  radius: 'Radio de Efecto',
+  blink_range: 'Distancia de Parpadeo',
+  push_length: 'Distancia de Empuje',
+  bonus_night_vision: 'Visión Nocturna',
+  projectile_speed: 'Velocidad de Proyectil',
+  magic_damage_block: 'Bloqueo de Daño Mágico',
+  damage_block_melee: 'Bloqueo Daño C/C',
+  damage_block_ranged: 'Bloqueo Daño Distancia',
+  corruption_armor: 'Reducción de Armadura',
+  corruption_duration: 'Duración Corrupción (seg)',
+};
+
+export function formatItemAttribute(attr: RawItemAttribute): { value: string; label: string } {
+  const val = Array.isArray(attr.value) ? attr.value.join('/') : String(attr.value ?? '');
+
+  // 1. If OpenDota provides a display template (e.g., "+ {value} Armor")
+  if (attr.display) {
+    let text = attr.display.replace(/\{value\}/g, val).trim();
+    const replacements: [string, string][] = [
+      ['Health Regeneration', 'Regen. de Vida'],
+      ['Mana Regeneration', 'Regen. de Maná'],
+      ['Max Health Regen', 'Regen. Máx. de Vida'],
+      ['All Attributes', 'Todos los Atributos'],
+      ['Selected Attribute', 'Atributo Elegido'],
+      ['Strength', 'Fuerza'],
+      ['Agility', 'Agilidad'],
+      ['Intelligence', 'Inteligencia'],
+      ['Damage', 'Daño'],
+      ['Attack Speed', 'Vel. de Ataque'],
+      ['Movement Speed', 'Vel. de Movimiento'],
+      ['Move Speed', 'Vel. de Movimiento'],
+      ['Magic Resistance', 'Resist. Mágica'],
+      ['Mana', 'Maná'],
+      ['Health', 'Vida'],
+      ['Armor', 'Armadura'],
+      ['Lifesteal', 'Robo de Vida'],
+      ['Spell Lifesteal', 'Robo de Vida Hechizo'],
+      ['Evasion', 'Evasión'],
+      ['Cast Range', 'Rango de Lanzamiento'],
+      ['Attack Range', 'Rango de Ataque'],
+      ['Projectile Speed', 'Vel. de Proyectil'],
+      ['Max Mana', 'Maná Máximo'],
+      ['MELEE', 'C/C'],
+      ['RANGED', 'Distancia']
+    ];
+    for (const [en, es] of replacements) {
+      text = text.replace(new RegExp(en, 'gi'), es);
+    }
+    // Clean label removing value and leading "+"
+    let label = text.replace(val, '').replace(/^\+\s*/, '').replace(/\s*\+\s*$/, '').trim();
+    if (!label) label = text;
+    return { value: val.startsWith('+') ? val : `+${val}`, label };
+  }
+
+  // 2. Check if header or footer exist
+  if (attr.header || attr.footer) {
+    const label = [attr.header, attr.footer].filter(Boolean).join(' ').trim();
+    return { value: val.startsWith('+') || val.startsWith('-') ? val : `+${val}`, label };
+  }
+
+  // 3. Fallback to dictionary translation by key
+  if (attr.key) {
+    const cleanKey = attr.key.toLowerCase().trim();
+    if (ATTRIB_DICTIONARY_ES[cleanKey]) {
+      return { value: val.startsWith('+') || val.startsWith('-') ? val : `+${val}`, label: ATTRIB_DICTIONARY_ES[cleanKey] };
+    }
+    const readable = cleanKey
+      .replace(/^bonus_/, '')
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+    return { value: val.startsWith('+') || val.startsWith('-') ? val : `+${val}`, label: readable };
+  }
+
+  return { value: val, label: 'Atributo' };
 }
 
 export interface RawItem {
@@ -93,7 +212,7 @@ export interface ItemData {
 
 // ─── LOCAL STORAGE CACHE CONSTANTS ───────────────────────────────────────────
 
-const CACHE_KEY = 'dotascope_items_database_cache_v2';
+const CACHE_KEY = 'dotascope_items_database_cache_v3';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface CachedPayload {
@@ -1734,17 +1853,15 @@ export const ItemsDatabasePage: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                     {activeItem.attrib.map((attr, idx) => {
-                      const val = Array.isArray(attr.value) ? attr.value.join('/') : attr.value;
-                      const header = attr.header || '';
-                      const footer = attr.footer || '';
+                      const formatted = formatItemAttribute(attr);
                       return (
                         <div
                           key={idx}
                           className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-200 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800"
                         >
-                          <span className="text-emerald-400 font-mono font-bold">{val}</span>
+                          <span className="text-emerald-400 font-mono font-bold shrink-0">{formatted.value}</span>
                           <span className="text-gray-300">
-                            {header} {footer}
+                            {formatted.label}
                           </span>
                         </div>
                       );

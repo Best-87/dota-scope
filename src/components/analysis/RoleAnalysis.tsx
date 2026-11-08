@@ -47,89 +47,68 @@ function inferPosition(match: RecentMatch): 1 | 2 | 3 | 4 | 5 {
   const safeLaneNum = radiant ? 1 : 3;
   const offLaneNum = radiant ? 3 : 1;
 
-  // ── 1. Midlaner (Pos 2) Detection ─────────────────────────────────────────
-  // Solo mid heroes or players stationed in mid with core farm
+  const isHighFarm = csPerMin >= 4.0 || gpm >= 420;
+  const isLowFarm = csPerMin < 2.8 && gpm < 380;
+
+  // ── 1. Telemetría de Líneas Directa (Prioridad Absoluta) ────────────────────
+  // Safe lane (Línea Segura: Lane 1 en Radiant, Lane 3 en Dire)
+  if (lane === safeLaneNum || laneRole === 1) {
+    if (isLowFarm && (primaryPos === 5 || primaryPos === 4)) {
+      return 5;
+    }
+    // Si farmea como core en safe lane, es Pos 1 (Carry) aunque el héroe sea DK, Lina, etc.
+    return 1;
+  }
+
+  // Offlane (Línea Difícil: Lane 3 en Radiant, Lane 1 en Dire)
+  if (lane === offLaneNum || laneRole === 3) {
+    if (isLowFarm && (primaryPos === 4 || primaryPos === 5 || isRoaming)) {
+      return 4;
+    }
+    // Si farmea como core en offlane, es Pos 3 (Offlaner)
+    return 3;
+  }
+
+  // Midlane (Lane 2 o lane_role 2)
   if (lane === 2 || laneRole === 2) {
-    // If it's a dedicated support hero with very low farm roaming through mid, they are pos 4
     if ((primaryPos === 4 || primaryPos === 5) && csPerMin < 2.5 && isRoaming) {
       return 4;
     }
     return 2;
   }
-  if (primaryPos === 2 && !isRoaming && csPerMin >= 3.0) {
-    return 2;
-  }
 
-  // ── 2. Dedicated Core vs Support Farm Test ─────────────────────────────────
-  // In Dota 2, cores farm > 4.5 CS/min or > 420 GPM. Supports have < 3.0 CS/min or < 380 GPM.
-  const isHighFarm = csPerMin >= 4.2 || gpm >= 440;
-  const isLowFarm = csPerMin < 2.8 && gpm < 380;
-
-  // ── 3. Hard Carries (Pos 1) ───────────────────────────────────────────────
-  if (primaryPos === 1) {
-    // If playing an offlane or support build with low farm
-    if (lane === offLaneNum && !isHighFarm) {
-      return 3;
-    }
-    return 1;
-  }
-
-  // If another hero was played as safe lane carry (high farm in safe lane)
-  if (lane === safeLaneNum && isHighFarm && laneRole === 1) {
-    return 1;
-  }
-
-  // ── 4. Dedicated Offlaners (Pos 3) ────────────────────────────────────────
-  if (primaryPos === 3) {
-    // If an offlaner was played safe lane as carry
-    if (lane === safeLaneNum && isHighFarm) {
-      return 1;
-    }
-    // If played as support (e.g. pos 4 Slardar, Enigma, etc. with very low farm)
-    if (isLowFarm && (isRoaming || laneRole === 4)) {
-      return 4;
-    }
-    return 3;
-  }
-
-  // ── 5. Roaming / Soft Support (Pos 4) ──────────────────────────────────────
+  // ── 2. Roaming / Soft Support ──────────────────────────────────────────────
   if (isRoaming || laneRole === 4) {
     return 4;
   }
 
-  // ── 6. Dedicated Supports (Pos 4 vs Pos 5) ────────────────────────────────
+  // ── 3. Partidas sin telemetría de carril (lane es null/undefined) ───────────
+  // Si el farm es muy alto de carry (top CS y GPM alto), catalogar como Carry
+  if (csPerMin >= 6.5 || (gpm >= 560 && csPerMin >= 4.5)) {
+    return 1;
+  }
+
+  // Si tiene arquetipo Mid pero con farm bajo, no es mid
+  if (primaryPos === 2) {
+    if (isLowFarm) return 4;
+    return 2;
+  }
+
+  if (primaryPos === 1) {
+    return 1;
+  }
+
+  if (primaryPos === 3) {
+    return 3;
+  }
+
   if (primaryPos === 4 || primaryPos === 5) {
-    // If the support player built carry/mid with unusually high farm
-    if (isHighFarm && csPerMin >= 5.0) {
-      if (lane === safeLaneNum) return 1;
-      if (lane === offLaneNum) return 3;
-    }
-
-    // Lane positioning for supports:
-    // Support in safe lane baby-sitting the carry = Pos 5
-    if (lane === safeLaneNum) {
-      return 5;
-    }
-    // Support in offlane pressuring the enemy carry = Pos 4
-    if (lane === offLaneNum) {
-      return 4;
-    }
-
-    // Default to primary archetype
+    if (isHighFarm && csPerMin >= 5.0) return 1;
     return primaryPos;
   }
 
-  // ── 7. Fallback based on Lane & Farm ───────────────────────────────────────
-  if (lane === safeLaneNum) {
-    return isHighFarm ? 1 : 5;
-  }
-  if (lane === offLaneNum) {
-    return isHighFarm ? 3 : 4;
-  }
-
-  // Farm-based fallback if lane data is missing
-  if (csPerMin >= 6.5 || gpm >= 550) return 1;
-  if (csPerMin >= 4.0 || gpm >= 420) return 3;
+  // Criterios generales por métricas
+  if (csPerMin >= 4.2 || gpm >= 440) return 3;
   if (csPerMin < 2.0 && gpm < 320) return 5;
 
   return primaryPos;

@@ -23,17 +23,24 @@ import {
 } from '../../utils/formatting';
 import { useConstants } from '../../hooks/useConstants';
 import { assignPositions, type DotaPosition } from '../../utils/matchAutopsy';
+import { getLaningRoles, OPENDOTA_ROLE_POSITIONS } from '../../utils/opendotaLaning';
 
 interface MatchDetailProps {
   match: MatchDetail;
   onRequestParse?: () => void;
   parseRequested?: boolean;
+  isParsing?: boolean;
+  parseElapsedSeconds?: number;
+  parseJobStatus?: string | null;
 }
 
 export const MatchDetailComponent: React.FC<MatchDetailProps> = ({
   match,
   onRequestParse,
   parseRequested = false,
+  isParsing = false,
+  parseElapsedSeconds = 0,
+  parseJobStatus = null,
 }) => {
   const { getHeroName } = useConstants();
 
@@ -45,30 +52,54 @@ export const MatchDetailComponent: React.FC<MatchDetailProps> = ({
   const radiantRoles = React.useMemo(() => assignPositions(radiantPlayers), [radiantPlayers]);
   const direRoles = React.useMemo(() => assignPositions(direPlayers), [direPlayers]);
 
+  // OpenDota exact roles from replay telemetry
+  const openDotaRadRoles = React.useMemo(
+    () => getLaningRoles(match.players || [], true),
+    [match.players]
+  );
+  const openDotaDireRoles = React.useMemo(
+    () => getLaningRoles(match.players || [], false),
+    [match.players]
+  );
+
   const radRoleBySlot = React.useMemo(() => {
     const map = new Map<number, DotaPosition>();
+    // First fill with assignPositions
     for (const [pos, player] of radiantRoles.entries()) {
       map.set(player.player_slot, pos);
     }
+    // Then override with exact OpenDota laning roles if parsed
+    for (const [role, player] of Object.entries(openDotaRadRoles)) {
+      if (player) {
+        map.set(player.player_slot, OPENDOTA_ROLE_POSITIONS[role as keyof typeof OPENDOTA_ROLE_POSITIONS]);
+      }
+    }
     return map;
-  }, [radiantRoles]);
+  }, [radiantRoles, openDotaRadRoles]);
 
   const direRoleBySlot = React.useMemo(() => {
     const map = new Map<number, DotaPosition>();
+    // First fill with assignPositions
     for (const [pos, player] of direRoles.entries()) {
       map.set(player.player_slot, pos);
     }
+    // Then override with exact OpenDota laning roles if parsed
+    for (const [role, player] of Object.entries(openDotaDireRoles)) {
+      if (player) {
+        map.set(player.player_slot, OPENDOTA_ROLE_POSITIONS[role as keyof typeof OPENDOTA_ROLE_POSITIONS]);
+      }
+    }
     return map;
-  }, [direRoles]);
+  }, [direRoles, openDotaDireRoles]);
 
   const getRoleTag = (pos?: DotaPosition) => {
     switch (pos) {
       case 1:
-        return { label: 'Pos 1 · HC', color: 'bg-amber-500/15 text-amber-300 border-amber-500/30' };
+        return { label: 'Pos 1 · Carry', color: 'bg-amber-500/15 text-amber-300 border-amber-500/30' };
       case 2:
         return { label: 'Pos 2 · Mid', color: 'bg-sky-500/15 text-sky-300 border-sky-500/30' };
       case 3:
-        return { label: 'Pos 3 · Lateral', color: 'bg-red-500/15 text-red-300 border-red-500/30' };
+        return { label: 'Pos 3 · Offlane', color: 'bg-red-500/15 text-red-300 border-red-500/30' };
       case 4:
         return { label: 'Pos 4 · Soft', color: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30' };
       case 5:
@@ -276,15 +307,35 @@ export const MatchDetailComponent: React.FC<MatchDetailProps> = ({
         </div>
 
         {/* Request Replay Parse action */}
-        {onRequestParse && (
-          <button
-            onClick={onRequestParse}
-            disabled={parseRequested}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-xs font-semibold text-gray-200 hover:text-white border border-slate-700 flex items-center gap-2 transition"
-          >
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            {parseRequested ? 'Parseo solicitado...' : 'Solicitar Parseo Completo'}
-          </button>
+        {onRequestParse && (!match.radiant_gold_adv || match.radiant_gold_adv.length === 0) && (
+          <div className="flex flex-col sm:items-end gap-1.5 shrink-0">
+            {parseRequested ? (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
+                <span>
+                  <strong>Parseando...</strong>{' '}
+                  <span className="font-mono bg-emerald-500/20 px-1.5 py-0.5 rounded text-[11px]">
+                    {Math.floor(parseElapsedSeconds / 60)}:
+                    {(parseElapsedSeconds % 60).toString().padStart(2, '0')}
+                  </span>
+                </span>
+              </div>
+            ) : (
+              <button
+                onClick={onRequestParse}
+                disabled={isParsing}
+                className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 hover:text-white border border-amber-500/50 flex items-center gap-2 text-xs font-bold transition disabled:opacity-50"
+              >
+                <Sparkles className={`w-4 h-4 text-amber-400 ${isParsing ? 'animate-spin' : ''}`} />
+                <span>{isParsing ? 'Enviando...' : 'Solicitar Parseo Completo'}</span>
+              </button>
+            )}
+            {parseRequested && parseJobStatus && (
+              <span className="text-[10px] text-gray-400 font-mono">
+                {parseJobStatus}
+              </span>
+            )}
+          </div>
         )}
       </div>
 

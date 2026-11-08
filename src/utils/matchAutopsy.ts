@@ -148,7 +148,7 @@ export const HERO_PRIMARY_ROLE: Record<number, DotaPosition> = {
   34: 2,  // Tinker
   36: 2,  // Necrophos
   39: 2,  // Queen of Pain
-  43: 2,  // Death Prophet
+  43: 3,  // Death Prophet (Primary Modern Meta: Offlaner / Pos 3)
   45: 2,  // Pugna
   46: 2,  // Templar Assassin
   47: 2,  // Viper
@@ -243,7 +243,9 @@ export const HERO_PRIMARY_ROLE: Record<number, DotaPosition> = {
 
 /**
  * Intelligent and accurate position assigner (Pos 1 to Pos 5).
- * Combines hero archetype affinity with parsed lane role and networth hierarchy.
+ * Prioritizes actual parsed lane telemetry (lane_role, lane) and farm distribution
+ * over static hero archetypes, allowing flex picks (e.g. Dragon Knight carry or offlane)
+ * to be classified accurately.
  */
 export function assignPositions(
   teamPlayers: MatchPlayer[],
@@ -254,7 +256,7 @@ export function assignPositions(
 
   if (unassigned.length === 0) return assigned;
 
-  // If user provided custom manual role overrides (e.g. from UI selector)
+  // 0. Manual role overrides from UI selector
   if (customOverrides) {
     for (const [posStr, playerSlot] of Object.entries(customOverrides)) {
       const pos = Number(posStr) as DotaPosition;
@@ -268,7 +270,7 @@ export function assignPositions(
   }
 
   // Check if lane telemetry is available
-  const hasLaneData = unassigned.some((p) => p.lane !== undefined && p.lane !== null);
+  const hasLaneData = unassigned.some((p) => (p.lane !== undefined && p.lane !== null) || (p.lane_role !== undefined && p.lane_role !== null));
   const isRad = isRadiant(teamPlayers[0].player_slot);
   const safeLaneNumber = isRad ? 1 : 3;
   const offLaneNumber = isRad ? 3 : 1;
@@ -282,32 +284,35 @@ export function assignPositions(
     return null;
   };
 
-  // 1. Identify Mid (Pos 2) if not already assigned
+  // 1. Identify Mid (Pos 2): ONLY players who ACTUALLY played mid lane
   if (!assigned.has(2)) {
     let mid: MatchPlayer | null = null;
     if (hasLaneData) {
+      // Direct lane 2 or lane_role 2 with core farm
       mid = claim((p) => (p.lane === 2 || p.lane_role === 2) && (p.last_hits || 0) >= 20);
       if (!mid) mid = claim((p) => p.lane === 2 || p.lane_role === 2);
     }
-    if (!mid) {
-      // Check primary hero archetype
+    // If unparsed match (no lane data), check hero archetype ONLY if no other player has lane telemetry
+    if (!mid && !hasLaneData) {
       mid = claim((p) => HERO_PRIMARY_ROLE[p.hero_id] === 2);
-    }
-    if (!mid && unassigned.length > 0) {
-      // 2nd highest net worth or solo XP
-      unassigned.sort((a, b) => (b.net_worth || 0) - (a.net_worth || 0));
-      mid = unassigned.length > 1 ? unassigned.splice(1, 1)[0] : unassigned.shift()!;
     }
     if (mid) assigned.set(2, mid);
   }
 
-  // 2. Identify Carry (Pos 1) if not already assigned
+  // 2. Identify Carry (Pos 1)
   if (!assigned.has(1)) {
     let carry: MatchPlayer | null = null;
-    // Check archetype first or safe lane core
-    carry = claim((p) => HERO_PRIMARY_ROLE[p.hero_id] === 1);
-    if (!carry && hasLaneData) {
-      carry = claim((p) => p.lane === safeLaneNumber || p.lane_role === 1);
+    if (hasLaneData) {
+      // Player who played safe lane core (lane_role 1 or safe lane with highest farm)
+      const safePlayers = unassigned.filter((p) => p.lane === safeLaneNumber || p.lane_role === 1);
+      if (safePlayers.length > 0) {
+        safePlayers.sort((a, b) => (b.last_hits || 0) - (a.last_hits || 0));
+        carry = claim((p) => p.player_slot === safePlayers[0].player_slot);
+      }
+    }
+    // Archetype or highest LH fallback
+    if (!carry) {
+      carry = claim((p) => HERO_PRIMARY_ROLE[p.hero_id] === 1);
     }
     if (!carry && unassigned.length > 0) {
       unassigned.sort((a, b) => (b.last_hits || 0) - (a.last_hits || 0));
@@ -316,12 +321,20 @@ export function assignPositions(
     if (carry) assigned.set(1, carry);
   }
 
-  // 3. Identify Offlaner (Pos 3) if not already assigned
+  // 3. Identify Offlaner (Pos 3)
   if (!assigned.has(3)) {
     let offlaner: MatchPlayer | null = null;
-    offlaner = claim((p) => HERO_PRIMARY_ROLE[p.hero_id] === 3);
-    if (!offlaner && hasLaneData) {
-      offlaner = claim((p) => p.lane === offLaneNumber || p.lane_role === 3);
+    if (hasLaneData) {
+      // Player who played off lane core (lane_role 3 or off lane with highest farm)
+      const offPlayers = unassigned.filter((p) => p.lane === offLaneNumber || p.lane_role === 3);
+      if (offPlayers.length > 0) {
+        offPlayers.sort((a, b) => (b.last_hits || 0) - (a.last_hits || 0));
+        offlaner = claim((p) => p.player_slot === offPlayers[0].player_slot);
+      }
+    }
+    // Archetype or highest remaining LH fallback
+    if (!offlaner) {
+      offlaner = claim((p) => HERO_PRIMARY_ROLE[p.hero_id] === 3);
     }
     if (!offlaner && unassigned.length > 0) {
       unassigned.sort((a, b) => (b.last_hits || 0) - (a.last_hits || 0));
@@ -330,12 +343,26 @@ export function assignPositions(
     if (offlaner) assigned.set(3, offlaner);
   }
 
-  // 4. Identify Hard Support (Pos 5) if not already assigned
+  // If mid was still not assigned (e.g. no lane data and no archetype 2), assign highest remaining core farm
+  if (!assigned.has(2)) {
+    if (unassigned.length > 0) {
+      unassigned.sort((a, b) => (b.net_worth || 0) - (a.net_worth || 0));
+      assigned.set(2, unassigned.shift()!);
+    }
+  }
+
+  // 4. Identify Hard Support (Pos 5)
   if (!assigned.has(5)) {
     let pos5: MatchPlayer | null = null;
-    pos5 = claim((p) => HERO_PRIMARY_ROLE[p.hero_id] === 5);
+    if (hasLaneData) {
+      // Support hero in safe lane with lower farm
+      pos5 = claim((p) => p.lane === safeLaneNumber && (HERO_PRIMARY_ROLE[p.hero_id] === 5 || (p.last_hits || 0) < 60));
+    }
+    if (!pos5) {
+      pos5 = claim((p) => HERO_PRIMARY_ROLE[p.hero_id] === 5);
+    }
     if (!pos5 && unassigned.length > 0) {
-      // The one with fewer last hits or higher wards
+      // Lowest last hits or highest wards placed
       unassigned.sort((a, b) => (a.last_hits || 0) - (b.last_hits || 0));
       pos5 = unassigned.shift()!;
     }
@@ -349,7 +376,7 @@ export function assignPositions(
     }
   }
 
-  // Fallback cleanup
+  // Fallback cleanup to guarantee all 5 positions exist
   for (let pos = 1; pos <= 5; pos++) {
     if (!assigned.has(pos as DotaPosition)) {
       const leftover = teamPlayers.find((tp) => !Array.from(assigned.values()).includes(tp));

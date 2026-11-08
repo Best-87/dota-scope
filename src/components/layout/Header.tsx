@@ -6,6 +6,7 @@ import { parsePlayerId } from '../../utils/steamId';
 import { getRankName } from '../../utils/formatting';
 import { usePwaInstall } from '../../hooks/usePwaInstall';
 import { usePwaUpdate } from '../../hooks/usePwaUpdate';
+import { NotificationPanel } from '../notifications/NotificationPanel';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -95,6 +96,9 @@ export const Header: React.FC = () => {
 
         {/* Player Profile / Status & PWA Install/Update */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
+          {/* Notification Bell */}
+          <NotificationPanel />
+
           {/* PWA Update Button */}
           {isUpdateAvailable && (
             <button

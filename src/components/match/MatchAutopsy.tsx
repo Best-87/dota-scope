@@ -49,10 +49,12 @@ import HeroIcon from '../common/HeroIcon';
 import { useConstants } from '../../hooks/useConstants';
 import { useGeminiAnalysis } from '../../hooks/useGeminiAnalysis';
 import { getStoredGeminiKey, saveGeminiKey } from '../../config/ai';
+import { ResourceRecommender } from './ResourceRecommender';
 
 interface MatchAutopsyProps {
   match: MatchDetail;
   focusAccountId?: number | null;
+  onSelectTab?: (tab: 'scoreboard' | 'autopsy' | 'laning' | 'learning' | 'gold_xp' | 'wards' | 'items') => void;
 }
 
 function buildRadarData(ts: { laning: number; vision: number | null; economy: number; teamfight: number; objectives: number }) {
@@ -71,7 +73,7 @@ function metricColor(status: 'good' | 'average' | 'poor' | 'bad') {
   return '#f87171';
 }
 
-export const MatchAutopsy: React.FC<MatchAutopsyProps> = ({ match, focusAccountId }) => {
+export const MatchAutopsy: React.FC<MatchAutopsyProps> = ({ match, focusAccountId, onSelectTab }) => {
   const { getHeroName, heroes } = useConstants();
   const [teamFilter, setTeamFilter] = useState<'auto' | 'radiant' | 'dire'>('auto');
   const [showLegend, setShowLegend] = useState(false);
@@ -202,6 +204,36 @@ export const MatchAutopsy: React.FC<MatchAutopsyProps> = ({ match, focusAccountI
                 </div>
               ))}
             </div>
+
+            {/* Quick action buttons to jump to Líneas, Patrimonio and Videos */}
+            {onSelectTab && (
+              <div className="flex items-center gap-2.5 mt-4 flex-wrap pt-3 border-t border-slate-800/80">
+                <button
+                  type="button"
+                  onClick={() => onSelectTab('laning')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-200 text-xs font-bold transition shadow-sm"
+                >
+                  <Compass className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Ver Fase de Líneas (OpenDota) →</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectTab('gold_xp')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 text-xs font-bold transition shadow-sm"
+                >
+                  <Coins className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Ver Gráfico de Patrimonio & Curva de Oro →</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectTab('learning')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-200 text-xs font-bold transition shadow-sm"
+                >
+                  <Zap className="w-3.5 h-3.5 text-red-400" />
+                  <span>Ver Videos de YouTube & Guías IA →</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Radar chart */}
@@ -611,6 +643,15 @@ export const MatchAutopsy: React.FC<MatchAutopsyProps> = ({ match, focusAccountI
             ))}
           </div>
         )}
+
+        {/* ── Recursos recomendados por IA (YouTube / Artículos) ── */}
+        <div className="border-t border-slate-800 pt-6 mt-2">
+          <ResourceRecommender
+            match={match}
+            autopsy={autopsy}
+            heroNames={heroNameMap}
+          />
+        </div>
       </div>
     </div>
   );

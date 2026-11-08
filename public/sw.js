@@ -2,7 +2,7 @@
 // The CACHE_VERSION is bumped at build time via sed in the build script.
 // When a new SW is detected, the app shows an "Actualizar" button.
 // On click, the app posts { type: 'SKIP_WAITING' } to this SW.
-const CACHE_VERSION = '1793505854';
+const CACHE_VERSION = '1794161013193';
 const CACHE_NAME = 'dotascope-v' + CACHE_VERSION;
 
 const STATIC_ASSETS = [
@@ -17,9 +17,9 @@ const STATIC_ASSETS = [
 ];
 
 // ─── Install ──────────────────────────────────────────────────
-// Pre-cache the app shell. Do NOT skipWaiting — let the app control
-// the update lifecycle so the user sees the "Actualizar" button.
+// Pre-cache the app shell and activate immediately so updates apply right away
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS).catch((err) => {
@@ -52,6 +52,49 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
+});
+
+// ─── Push Notifications ───────────────────────────────────────
+// Handles incoming push messages (e.g. from a future backend).
+self.addEventListener('push', (event) => {
+  let data = { title: 'DotaScope', body: 'Tienes una actualización.' };
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch {
+      data.body = event.data.text() || data.body;
+    }
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'DotaScope', {
+      body: data.body,
+      icon: './icons/icon-192.png',
+      badge: './icons/icon-192.png',
+      tag: data.tag || 'dotascope-notif',
+      data: data.url ? { url: data.url } : undefined,
+      vibrate: [200, 100, 200],
+    })
+  );
+});
+
+// ─── Notification Click ────────────────────────────────────────
+// Opens the app when the user taps a notification.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || './';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(url);
+      }
+    })
+  );
 });
 
 // ─── Fetch Strategy ───────────────────────────────────────────
