@@ -38,9 +38,10 @@ const ResourceCard: React.FC<{
         <div className="relative w-full aspect-video bg-black">
           <iframe
             className="w-full h-full border-0"
-            src={`https://www.youtube.com/embed/${rec.youtubeId}?autoplay=1`}
+            src={`https://www.youtube-nocookie.com/embed/${rec.youtubeId}?autoplay=1&rel=0`}
             title={rec.title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
             allowFullScreen
           />
         </div>
