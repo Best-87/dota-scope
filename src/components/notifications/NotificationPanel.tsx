@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, BellRing, X, CheckCheck, Trash2, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bell, BellRing, X, CheckCheck, Trash2 } from 'lucide-react';
 import { usePushNotifications, type DotaNotification } from '../../hooks/usePushNotifications';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -31,33 +32,53 @@ function notifIcon(n: DotaNotification): string {
   return '🔔';
 }
 
+// Resolve the in-app route for a notification based on tag + data
+function getNotifRoute(n: DotaNotification): string | null {
+  const t = n.tag ?? '';
+  const matchId = n.data?.matchId;
+  if (matchId && (t.includes('new_match') || t.includes('parsed') || t.includes('parse_requested'))) {
+    return `/match/${matchId}`;
+  }
+  if (t.includes('dashboard') && n.data?.accountId) {
+    return `/dashboard/${n.data.accountId}`;
+  }
+  return null;
+}
+
 // ─── NotificationItem ─────────────────────────────────────────────────────────
 
 const NotificationItem: React.FC<{
   notif: DotaNotification;
-  onRead: (id: string) => void;
-}> = ({ notif, onRead }) => (
-  <div
-    onClick={() => onRead(notif.id)}
-    className={`flex items-start gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition hover:bg-slate-800/60 ${
-      notif.read ? 'opacity-60' : 'bg-slate-900/80 border border-slate-800'
-    }`}
-  >
-    <span className="text-lg shrink-0 leading-none mt-0.5">{notifIcon(notif)}</span>
-    <div className="flex-1 min-w-0">
-      <p className={`text-xs font-bold truncate ${notifColor(notif)}`}>{notif.title}</p>
-      <p className="text-xs text-gray-300 leading-relaxed mt-0.5 line-clamp-2">{notif.body}</p>
-      <p className="text-[10px] text-gray-500 mt-1">{timeAgo(notif.timestamp)}</p>
+  onClick: () => void;
+}> = ({ notif, onClick }) => {
+  const route = getNotifRoute(notif);
+  return (
+    <div
+      onClick={onClick}
+      className={`flex items-start gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition hover:bg-slate-800/60 ${
+        notif.read ? 'opacity-60' : 'bg-slate-900/80 border border-slate-800'
+      }`}
+    >
+      <span className="text-lg shrink-0 leading-none mt-0.5">{notifIcon(notif)}</span>
+      <div className="flex-1 min-w-0">
+        <p className={`text-xs font-bold truncate flex items-center gap-1.5 ${notifColor(notif)}`}>
+          <span className="truncate">{notif.title}</span>
+          {route && <span className="shrink-0 text-gray-500 text-[10px]">→ ver</span>}
+        </p>
+        <p className="text-xs text-gray-300 leading-relaxed mt-0.5 line-clamp-2">{notif.body}</p>
+        <p className="text-[10px] text-gray-500 mt-1">{timeAgo(notif.timestamp)}</p>
+      </div>
+      {!notif.read && (
+        <span className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-1.5" />
+      )}
     </div>
-    {!notif.read && (
-      <span className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-1.5" />
-    )}
-  </div>
-);
+  );
+};
 
 // ─── NotificationPanel ────────────────────────────────────────────────────────
 
 export const NotificationPanel: React.FC = () => {
+  const navigate = useNavigate();
   const {
     permission,
     notifications,
@@ -83,6 +104,15 @@ export const NotificationPanel: React.FC = () => {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
+
+  const handleNotifClick = (notif: DotaNotification) => {
+    markRead(notif.id);
+    const route = getNotifRoute(notif);
+    if (route) {
+      setOpen(false);
+      navigate(route);
+    }
+  };
 
   return (
     <div className="relative" ref={panelRef}>
@@ -187,7 +217,7 @@ export const NotificationPanel: React.FC = () => {
               </div>
             ) : (
               notifications.map((n) => (
-                <NotificationItem key={n.id} notif={n} onRead={markRead} />
+                <NotificationItem key={n.id} notif={n} onClick={() => handleNotifClick(n)} />
               ))
             )}
           </div>

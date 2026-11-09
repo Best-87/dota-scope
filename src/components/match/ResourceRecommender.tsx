@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   BookOpen,
   ExternalLink,
@@ -174,11 +174,26 @@ export const ResourceRecommender: React.FC<ResourceRecommenderProps> = ({
   const { status, result, recommend, reset } = useResourceRecommender();
   const [activePlayingId, setActivePlayingId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'video' | 'article'>('all');
+  const [regenCount, setRegenCount] = useState(0);
+
+  // Ref to track current args so the effect can call recommend with fresh values
+  const matchRef = useRef(match);
+  const autopsyRef = useRef(autopsy);
+  const heroNamesRef = useRef(heroNames);
+  matchRef.current = match;
+  autopsyRef.current = autopsy;
+  heroNamesRef.current = heroNames;
 
   useEffect(() => {
-    recommend(match, autopsy, heroNames);
+    recommend(matchRef.current, autopsyRef.current, heroNamesRef.current);
     return () => reset();
-  }, [match.match_id, recommend, reset, autopsy, heroNames]);
+    // regenCount is the trigger — intentionally not including match/autopsy/heroNames
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [match.match_id, regenCount, recommend, reset]);
+
+  const handleRegenerate = useCallback(() => {
+    setRegenCount((c) => c + 1);
+  }, []);
 
   const allRecs = result?.recommendations || [];
   const filteredRecs = allRecs.filter((r) => {
@@ -213,7 +228,7 @@ export const ResourceRecommender: React.FC<ResourceRecommenderProps> = ({
           </div>
 
           <button
-            onClick={() => recommend(match, autopsy, heroNames)}
+            onClick={handleRegenerate}
             disabled={status === 'loading'}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-gray-300 hover:text-white transition disabled:opacity-40"
           >
