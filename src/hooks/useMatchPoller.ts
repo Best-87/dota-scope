@@ -12,7 +12,7 @@ export interface MatchPollerOptions {
   onMatchParsed: (match: RecentMatch) => void;
 }
 
-const POLL_KEY = 'dotascope_poller_state_v1';
+const POLL_PREFIX = 'dotascope_poller_state_u_';
 
 interface PollerState {
   lastMatchId: number | null;
@@ -20,9 +20,10 @@ interface PollerState {
   knownParsed: number[]; // match IDs already seen as parsed
 }
 
-function loadState(): PollerState {
+function loadState(accountId: number | null): PollerState {
   try {
-    const raw = localStorage.getItem(POLL_KEY);
+    const key = accountId ? `${POLL_PREFIX}${accountId}` : `${POLL_PREFIX}guest`;
+    const raw = localStorage.getItem(key);
     if (!raw) return { lastMatchId: null, lastChecked: 0, knownParsed: [] };
     return JSON.parse(raw) as PollerState;
   } catch {
@@ -30,11 +31,12 @@ function loadState(): PollerState {
   }
 }
 
-function saveState(s: PollerState) {
+function saveState(accountId: number | null, s: PollerState) {
   try {
+    const key = accountId ? `${POLL_PREFIX}${accountId}` : `${POLL_PREFIX}guest`;
     // Keep knownParsed limited to last 50
     s.knownParsed = s.knownParsed.slice(-50);
-    localStorage.setItem(POLL_KEY, JSON.stringify(s));
+    localStorage.setItem(key, JSON.stringify(s));
   } catch {
     // Ignore
   }
@@ -49,10 +51,15 @@ export function useMatchPoller({
   onNewMatch,
   onMatchParsed,
 }: MatchPollerOptions) {
-  const stateRef = useRef<PollerState>(loadState());
+  const stateRef = useRef<PollerState>(loadState(accountId));
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onNewMatchRef = useRef(onNewMatch);
   const onMatchParsedRef = useRef(onMatchParsed);
+
+  // Reload state whenever accountId changes
+  useEffect(() => {
+    stateRef.current = loadState(accountId);
+  }, [accountId]);
 
   // Always keep callbacks fresh
   useEffect(() => { onNewMatchRef.current = onNewMatch; }, [onNewMatch]);
@@ -87,7 +94,7 @@ export function useMatchPoller({
       // Update state
       state.lastMatchId = newest.match_id;
       state.lastChecked = Date.now();
-      saveState(state);
+      saveState(accountId, state);
     } catch {
       // Network error, silently ignore
     }
@@ -113,7 +120,7 @@ export function useMatchPoller({
           }
         });
         state.lastChecked = Date.now();
-        saveState(state);
+        saveState(accountId, state);
       }
     } catch {
       // Ignore

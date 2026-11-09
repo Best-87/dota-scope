@@ -33,7 +33,12 @@ const RootRedirect: React.FC = () => {
 
 const MatchNotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { accountId } = usePlayerContext();
-  const { sendNotification } = usePushNotifications();
+  const { sendNotification, setCurrentAccountId } = usePushNotifications();
+
+  // Sync active player with notifications system
+  React.useEffect(() => {
+    setCurrentAccountId(accountId);
+  }, [accountId, setCurrentAccountId]);
 
   const onNewMatch = useCallback((match: RecentMatch) => {
     const heroText = match.hero_id ? `(Héroe #${match.hero_id})` : '';
@@ -43,22 +48,22 @@ const MatchNotificationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     sendNotification(
       '⚔️ Nueva Partida Detectada',
       `Match #${match.match_id} ${heroText} — ${result}`.trim(),
-      { tag: 'new_match', data: { matchId: match.match_id } }
+      { tag: `new_match_${match.match_id}`, accountId, data: { matchId: match.match_id } }
     );
-  }, [sendNotification]);
+  }, [sendNotification, accountId]);
 
   const onMatchParsed = useCallback((match: RecentMatch) => {
     sendNotification(
       '🔬 Partida Analizada',
       `El análisis completo de la partida #${match.match_id} ya está disponible.`,
-      { tag: 'parsed', data: { matchId: match.match_id } }
+      { tag: `parsed_${match.match_id}`, accountId, data: { matchId: match.match_id } }
     );
-  }, [sendNotification]);
+  }, [sendNotification, accountId]);
 
   useMatchPoller({
     accountId,
     enabled: Boolean(accountId),
-    intervalMs: 60 * 1000, // Every 1 minute
+    intervalMs: 45 * 1000, // Every 45s for faster mobile response
     onNewMatch,
     onMatchParsed,
   });

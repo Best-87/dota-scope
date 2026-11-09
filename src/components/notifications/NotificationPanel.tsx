@@ -83,6 +83,7 @@ export const NotificationPanel: React.FC = () => {
     permission,
     notifications,
     unreadCount,
+    currentAccountId,
     requestPermission,
     markRead,
     markAllRead,
@@ -142,6 +143,11 @@ export const NotificationPanel: React.FC = () => {
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-sky-400" />
               <span className="text-sm font-bold text-white">Notificaciones</span>
+              {currentAccountId && (
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-gray-400 font-mono">
+                  #{currentAccountId}
+                </span>
+              )}
               {unreadCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px] font-bold">
                   {unreadCount} nuevas
@@ -210,9 +216,11 @@ export const NotificationPanel: React.FC = () => {
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
                 <Bell className="w-8 h-8 text-slate-700 mb-3" />
-                <p className="text-sm text-gray-500">Sin notificaciones aún</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  Aparecerán aquí cuando haya partidas nuevas o análisis listos.
+                <p className="text-sm text-gray-500">Sin notificaciones para este jugador</p>
+                <p className="text-xs text-gray-600 mt-1 max-w-[220px]">
+                  {currentAccountId
+                    ? `Monitoreando partidas y análisis del jugador #${currentAccountId}.`
+                    : 'Selecciona un jugador para ver sus alertas de partida.'}
                 </p>
               </div>
             ) : (

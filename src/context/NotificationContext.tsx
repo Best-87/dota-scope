@@ -14,6 +14,7 @@ export type NotifPermission = 'default' | 'granted' | 'denied' | 'unsupported';
 
 export interface DotaNotification {
   id: string;
+  accountId?: number | null;
   title: string;
   body: string;
   icon?: string;
@@ -28,11 +29,14 @@ export interface NotificationContextValue {
   notifications: DotaNotification[];
   unreadCount: number;
   activeToast: DotaNotification | null;
+  currentAccountId: number | null;
+  setCurrentAccountId: (id: number | null) => void;
   requestPermission: () => Promise<NotifPermission>;
   sendNotification: (
     title: string,
     body: string,
     options?: {
+      accountId?: number | null;
       icon?: string;
       tag?: string;
       data?: Record<string, unknown>;
@@ -46,12 +50,16 @@ export interface NotificationContextValue {
   testNotification: () => void;
 }
 
-const NOTIF_STORE_KEY = 'dotascope_notifications_v2';
-const MAX_STORED = 40;
+const NOTIF_STORE_PREFIX = 'dotascope_notifications_u_';
+const MAX_STORED = 50;
 
-function loadStored(): DotaNotification[] {
+function getStorageKey(accountId: number | null): string {
+  return accountId ? `${NOTIF_STORE_PREFIX}${accountId}` : `${NOTIF_STORE_PREFIX}guest`;
+}
+
+function loadStored(accountId: number | null): DotaNotification[] {
   try {
-    const raw = localStorage.getItem(NOTIF_STORE_KEY);
+    const raw = localStorage.getItem(getStorageKey(accountId));
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -60,9 +68,9 @@ function loadStored(): DotaNotification[] {
   }
 }
 
-function saveStored(notifs: DotaNotification[]) {
+function saveStored(accountId: number | null, notifs: DotaNotification[]) {
   try {
-    localStorage.setItem(NOTIF_STORE_KEY, JSON.stringify(notifs.slice(0, MAX_STORED)));
+    localStorage.setItem(getStorageKey(accountId), JSON.stringify(notifs.slice(0, MAX_STORED)));
   } catch {
     // Ignore storage quota errors
   }
@@ -73,20 +81,36 @@ export const NotificationContext = createContext<NotificationContextValue | unde
 // ─── Provider Component ───────────────────────────────────────────────────────
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [currentAccountId, setCurrentAccountId] = useState<number | null>(() => {
+    try {
+      const stored = localStorage.getItem('dotascope_account_id');
+      return stored ? Number(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [permission, setPermission] = useState<NotifPermission>(() => {
     if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported';
     return Notification.permission as NotifPermission;
   });
 
-  const [notifications, setNotifications] = useState<DotaNotification[]>(() => loadStored());
+  const [notifications, setNotifications] = useState<DotaNotification[]>(() =>
+    loadStored(currentAccountId)
+  );
   const [activeToast, setActiveToast] = useState<DotaNotification | null>(null);
+
+  // When currentAccountId changes, load that user's notifications
+  useEffect(() => {
+    setNotifications(loadStored(currentAccountId));
+  }, [currentAccountId]);
 
   const unreadCount = useMemo(
     () => notifications.filter((n) => !n.read).length,
     [notifications]
   );
 
-  // Request browser permission
+  // Request browser/system notification permission
   const requestPermission = useCallback(async (): Promise<NotifPermission> => {
     if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported';
     if (Notification.permission === 'granted') {
@@ -107,21 +131,24 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setActiveToast(null);
   }, []);
 
-  // Send notification (updates UI state, shows in-app toast, and sends system push)
+  // Send notification (updates UI state, shows in-app toast, and triggers native mobile notification)
   const sendNotification = useCallback(
     (
       title: string,
       body: string,
       options?: {
+        accountId?: number | null;
         icon?: string;
         tag?: string;
         data?: Record<string, unknown>;
         silent?: boolean;
       }
     ) => {
+      const targetUser = options?.accountId !== undefined ? options.accountId : currentAccountId;
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       const notif: DotaNotification = {
         id,
+        accountId: targetUser,
         title,
         body,
         icon: options?.icon ?? './icons/icon-192.png',
@@ -131,32 +158,63 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         read: false,
       };
 
-      // 1. Update shared state and localStorage
-      setNotifications((prev) => {
-        const updated = [notif, ...prev.filter((item) => item.id !== notif.id)].slice(0, MAX_STORED);
-        saveStored(updated);
-        return updated;
-      });
+      // 1. Update storage for the target user
+      const existing = loadStored(targetUser);
+      const updated = [notif, ...existing.filter((item) => item.id !== notif.id)].slice(0, MAX_STORED);
+      saveStored(targetUser, updated);
 
-      // 2. Trigger in-app floating toast banner
-      setActiveToast(notif);
+      // If notification belongs to active viewing user, update component state & show in-app toast
+      if (targetUser === currentAccountId || (!targetUser && !currentAccountId)) {
+        setNotifications(updated);
+        setActiveToast(notif);
+        setTimeout(() => {
+          setActiveToast((current) => (current?.id === notif.id ? null : current));
+        }, 6500);
+      }
 
-      // Auto dismiss toast after 6.5s
-      setTimeout(() => {
-        setActiveToast((current) => (current?.id === notif.id ? null : current));
-      }, 6500);
-
-      // 3. Trigger haptic vibration if supported on Android
+      // 2. Trigger native mobile vibration (WhatsApp-like double buzz)
       if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
         try {
-          navigator.vibrate([100, 50, 100]);
+          navigator.vibrate([180, 80, 180]);
         } catch {
           // Ignore
         }
       }
 
-      // 4. Try browser Notification API
-      if (
+      // 3. Native Service Worker notification with system heads-up and actions (WhatsApp style)
+      const targetUrl = options?.data?.matchId
+        ? `#/match/${options.data.matchId}`
+        : targetUser
+        ? `#/dashboard/${targetUser}`
+        : '#/';
+
+      const swData = {
+        url: targetUrl,
+        matchId: options?.data?.matchId,
+        accountId: targetUser,
+        ...(options?.data || {}),
+      };
+
+      if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.ready
+          .then((reg) => {
+            if (reg.showNotification && Notification.permission === 'granted') {
+              reg.showNotification(title, {
+                body,
+                icon: notif.icon,
+                badge: './icons/icon-192.png',
+                tag: options?.tag || `dota_${targetUser || 'general'}_${Date.now()}`,
+                renotify: true,
+                requireInteraction: false,
+                silent: options?.silent ?? false,
+                data: swData,
+                // WhatsApp-like pattern: vibrate on mobile, timestamp
+                timestamp: Date.now(),
+              } as NotificationOptions);
+            }
+          })
+          .catch(() => {});
+      } else if (
         typeof window !== 'undefined' &&
         'Notification' in window &&
         Notification.permission === 'granted'
@@ -167,64 +225,56 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             icon: notif.icon,
             tag: options?.tag,
             silent: options?.silent ?? false,
-            data: options?.data,
+            data: swData,
           });
-          setTimeout(() => n.close(), 8000);
+          n.onclick = () => {
+            window.focus();
+            if (options?.data?.matchId) {
+              window.location.hash = `#/match/${options.data.matchId}`;
+            }
+          };
+          setTimeout(() => n.close(), 10000);
         } catch {
-          // Ignore browser restriction
+          // Ignore
         }
       }
-
-      // 5. Try Service Worker showNotification (PWA background compatible)
-      if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-        navigator.serviceWorker.ready
-          .then((reg) => {
-            if (reg.showNotification && Notification.permission === 'granted') {
-              reg.showNotification(title, {
-                body,
-                icon: notif.icon,
-                badge: './icons/icon-192.png',
-                tag: options?.tag,
-                data: options?.data,
-              });
-            }
-          })
-          .catch(() => {});
-      }
     },
-    []
+    [currentAccountId]
   );
 
-  const markRead = useCallback((id: string) => {
-    setNotifications((prev) => {
-      const updated = prev.map((n) => (n.id === id ? { ...n, read: true } : n));
-      saveStored(updated);
-      return updated;
-    });
-  }, []);
+  const markRead = useCallback(
+    (id: string) => {
+      setNotifications((prev) => {
+        const updated = prev.map((n) => (n.id === id ? { ...n, read: true } : n));
+        saveStored(currentAccountId, updated);
+        return updated;
+      });
+    },
+    [currentAccountId]
+  );
 
   const markAllRead = useCallback(() => {
     setNotifications((prev) => {
       const updated = prev.map((n) => ({ ...n, read: true }));
-      saveStored(updated);
+      saveStored(currentAccountId, updated);
       return updated;
     });
-  }, []);
+  }, [currentAccountId]);
 
   const clearAll = useCallback(() => {
     setNotifications([]);
-    saveStored([]);
+    saveStored(currentAccountId, []);
     setActiveToast(null);
-  }, []);
+  }, [currentAccountId]);
 
   // Quick test method for user verification
   const testNotification = useCallback(() => {
     sendNotification(
-      '🧪 Prueba de Notificación DotaScope',
-      'El sistema de notificaciones está funcionando correctamente. Recibirás avisos de nuevas partidas y análisis parseados.',
-      { tag: 'test' }
+      '🧪 Prueba de Notificación Nativa',
+      '¡Funciona! Recibirás avisos nativos tipo WhatsApp cuando termine una partida o se complete el parseo.',
+      { tag: 'test', accountId: currentAccountId }
     );
-  }, [sendNotification]);
+  }, [sendNotification, currentAccountId]);
 
   const value = useMemo(
     () => ({
@@ -232,6 +282,8 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       notifications,
       unreadCount,
       activeToast,
+      currentAccountId,
+      setCurrentAccountId,
       requestPermission,
       sendNotification,
       dismissToast,
@@ -245,6 +297,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       notifications,
       unreadCount,
       activeToast,
+      currentAccountId,
       requestPermission,
       sendNotification,
       dismissToast,

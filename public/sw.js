@@ -55,9 +55,9 @@ self.addEventListener('message', (event) => {
 });
 
 // ─── Push Notifications ───────────────────────────────────────
-// Handles incoming push messages (e.g. from a future backend).
+// Handles incoming push messages (background or simulated push).
 self.addEventListener('push', (event) => {
-  let data = { title: 'DotaScope', body: 'Tienes una actualización.' };
+  let data = { title: 'DotaScope', body: 'Tienes una actualización táctica disponible.' };
   if (event.data) {
     try {
       data = event.data.json();
@@ -65,33 +65,47 @@ self.addEventListener('push', (event) => {
       data.body = event.data.text() || data.body;
     }
   }
+
+  const targetUrl = data.url || (data.matchId ? `#/match/${data.matchId}` : './');
+
   event.waitUntil(
     self.registration.showNotification(data.title || 'DotaScope', {
       body: data.body,
       icon: './icons/icon-192.png',
       badge: './icons/icon-192.png',
-      tag: data.tag || 'dotascope-notif',
-      data: data.url ? { url: data.url } : undefined,
+      tag: data.tag || `dotascope-${Date.now()}`,
+      renotify: true,
+      data: { url: targetUrl, matchId: data.matchId, accountId: data.accountId },
+      // WhatsApp-style vibration: buzz-pause-buzz
       vibrate: [200, 100, 200],
+      actions: [
+        { action: 'open', title: 'Ver Partida' }
+      ]
     })
   );
 });
 
 // ─── Notification Click ────────────────────────────────────────
-// Opens the app when the user taps a notification.
+// Opens or brings to front the app when the user taps a mobile notification.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || './';
+
+  const targetUrl = event.notification.data?.url || './';
+
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // If a window is already open, focus it and navigate to destination
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.navigate(url);
+          if ('navigate' in client) {
+            client.navigate(targetUrl);
+          }
           return client.focus();
         }
       }
+      // Otherwise open a new window
       if (self.clients.openWindow) {
-        return self.clients.openWindow(url);
+        return self.clients.openWindow(targetUrl);
       }
     })
   );
