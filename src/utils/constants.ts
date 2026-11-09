@@ -151,3 +151,14 @@ export function getItemImageUrl(itemImg?: string | null): string {
   const cleanPath = itemImg.startsWith('/') ? itemImg : `/${itemImg}`;
   return `${OPENDOTA_CDN}${cleanPath}`;
 }
+
+import HERO_NAME_MAP from './heroMap.json';
+
+/**
+ * Returns the localized hero name for a given hero ID, with fallback.
+ */
+export function getHeroNameById(heroId: number | null | undefined): string {
+  if (!heroId) return 'Desconocido';
+  const name = (HERO_NAME_MAP as Record<string, string>)[String(heroId)];
+  return name || `Héroe #${heroId}`;
+}

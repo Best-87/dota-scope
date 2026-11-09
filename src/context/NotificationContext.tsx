@@ -100,9 +100,15 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   );
   const [activeToast, setActiveToast] = useState<DotaNotification | null>(null);
 
-  // When currentAccountId changes, load that user's notifications
+  // When currentAccountId changes, load that user's notifications and notify Service Worker
   useEffect(() => {
     setNotifications(loadStored(currentAccountId));
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SET_ACTIVE_ACCOUNT',
+        accountId: currentAccountId,
+      });
+    }
   }, [currentAccountId]);
 
   const unreadCount = useMemo(

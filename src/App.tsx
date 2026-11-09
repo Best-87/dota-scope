@@ -8,6 +8,7 @@ import Loading from './components/common/Loading';
 import { usePushNotifications } from './hooks/usePushNotifications';
 import { useMatchPoller } from './hooks/useMatchPoller';
 import type { RecentMatch } from './api/types';
+import { getHeroNameById } from './utils/constants';
 
 // Lazy-load heavier routes to make initial bundle tiny & startup instant
 const HeroesPage = lazy(() => import('./pages/HeroesPage'));
@@ -41,21 +42,22 @@ const MatchNotificationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, [accountId, setCurrentAccountId]);
 
   const onNewMatch = useCallback((match: RecentMatch) => {
-    const heroText = match.hero_id ? `(Héroe #${match.hero_id})` : '';
+    const heroName = getHeroNameById(match.hero_id);
     const result = match.player_slot !== undefined
       ? ((match.player_slot < 128) === Boolean(match.radiant_win) ? '✅ Victoria' : '❌ Derrota')
       : '';
     sendNotification(
-      '⚔️ Nueva Partida Detectada',
-      `Match #${match.match_id} ${heroText} — ${result}`.trim(),
+      `⚔️ Nueva Partida: ${heroName}`,
+      `Match #${match.match_id} — ${heroName} (${result})`.trim(),
       { tag: `new_match_${match.match_id}`, accountId, data: { matchId: match.match_id } }
     );
   }, [sendNotification, accountId]);
 
   const onMatchParsed = useCallback((match: RecentMatch) => {
+    const heroName = getHeroNameById(match.hero_id);
     sendNotification(
-      '🔬 Partida Analizada',
-      `El análisis completo de la partida #${match.match_id} ya está disponible.`,
+      `🔬 Análisis Listo: ${heroName}`,
+      `El análisis completo de la partida #${match.match_id} con ${heroName} ya está disponible.`,
       { tag: `parsed_${match.match_id}`, accountId, data: { matchId: match.match_id } }
     );
   }, [sendNotification, accountId]);
