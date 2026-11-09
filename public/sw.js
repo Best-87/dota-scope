@@ -13,6 +13,7 @@ const STATIC_ASSETS = [
   './icons/icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './icons/badge-96.png',
   './icons/apple-touch-icon.png'
 ];
 
@@ -72,7 +73,7 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(data.title || 'DotaScope', {
       body: data.body,
       icon: './icons/icon-192.png',
-      badge: './icons/icon-192.png',
+      badge: './icons/badge-96.png',
       tag: data.tag || `dotascope-${Date.now()}`,
       renotify: true,
       data: { url: targetUrl, matchId: data.matchId, accountId: data.accountId },

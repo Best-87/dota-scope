@@ -202,7 +202,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
               reg.showNotification(title, {
                 body,
                 icon: notif.icon,
-                badge: './icons/icon-192.png',
+                badge: './icons/badge-96.png',
                 tag: options?.tag || `dota_${targetUser || 'general'}_${Date.now()}`,
                 renotify: true,
                 requireInteraction: false,
