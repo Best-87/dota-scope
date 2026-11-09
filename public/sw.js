@@ -91,20 +91,27 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  const targetUrl = event.notification.data?.url || './';
+  // Resolve destination relative to registration scope to prevent loading sw.js as a page
+  const rawPath = event.notification.data?.url || './';
+  let targetUrl;
+  try {
+    targetUrl = new URL(rawPath, self.registration.scope).href;
+  } catch {
+    targetUrl = self.registration.scope;
+  }
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // If a window is already open, focus it and navigate to destination
+      // If a window is already open under this origin/scope, focus it and navigate
       for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
+        if ('focus' in client) {
           if ('navigate' in client) {
             client.navigate(targetUrl);
           }
           return client.focus();
         }
       }
-      // Otherwise open a new window
+      // Otherwise open a new window pointing to the app
       if (self.clients.openWindow) {
         return self.clients.openWindow(targetUrl);
       }

@@ -182,11 +182,15 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       }
 
       // 3. Native Service Worker notification with system heads-up and actions (WhatsApp style)
-      const targetUrl = options?.data?.matchId
+      const appBase = typeof window !== 'undefined'
+        ? `${window.location.origin}${window.location.pathname}`
+        : './';
+      const targetHash = options?.data?.matchId
         ? `#/match/${options.data.matchId}`
         : targetUser
         ? `#/dashboard/${targetUser}`
         : '#/';
+      const targetUrl = `${appBase}${targetHash}`;
 
       const swData = {
         url: targetUrl,
