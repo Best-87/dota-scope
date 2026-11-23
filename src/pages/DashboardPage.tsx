@@ -55,10 +55,11 @@ export const DashboardPage: React.FC = () => {
     );
   }
 
-  const isLoading = (playerLoading && !player && !playerError) || statsLoading;
+  // Only block the entire screen if the player profile itself has not loaded yet and has no error
+  const isLoading = playerLoading && !player && !playerError;
 
   if (isLoading) {
-    return <Loading message="Cargando estadísticas del jugador..." size="lg" />;
+    return <Loading message="Cargando perfil del jugador..." size="lg" />;
   }
 
   const hasError = statsError || matchesError || playerError;
@@ -94,7 +95,7 @@ export const DashboardPage: React.FC = () => {
       />
 
       {/* Most Played Heroes Grid */}
-      <HeroGrid heroes={heroes} accountId={accountId} limit={6} />
+      <HeroGrid heroes={heroes} accountId={accountId} limit={6} loading={statsLoading} />
 
       {/* Recent Matches List with pagination */}
       <RecentMatches

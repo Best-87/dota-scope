@@ -16,8 +16,8 @@ import type {
 } from './types';
 
 const BASE_URL = 'https://api.opendota.com/api';
-const DEFAULT_REQUEST_INTERVAL_MS = 1000;
-const MAX_RETRIES = 3;
+const DEFAULT_REQUEST_INTERVAL_MS = 250;
+const MAX_RETRIES = 2;
 
 /**
  * Custom error class for OpenDota API errors.
@@ -138,9 +138,16 @@ async function fetchWithRetry<T>(
   return requestQueue.enqueue(async () => {
     let response: Response;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
     try {
-      response = await fetch(url, options);
+      response = await fetch(url, {
+        ...options,
+        signal: options?.signal || controller.signal,
+      });
     } catch (networkError) {
+      clearTimeout(timeoutId);
       throw new OpenDotaApiError(
         networkError instanceof Error
           ? networkError.message
@@ -150,6 +157,7 @@ async function fetchWithRetry<T>(
         url
       );
     }
+    clearTimeout(timeoutId);
 
     // Handle 429 Rate Limiting
     if (response.status === 429) {
