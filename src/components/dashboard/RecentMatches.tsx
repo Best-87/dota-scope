@@ -3,11 +3,10 @@ import { Link } from 'react-router-dom';
 import {
   Gamepad2,
   Clock,
-  ExternalLink,
   ChevronRight,
-  TrendingUp,
   CheckCircle2,
-  Activity,
+  Swords,
+  TrendingUp,
 } from 'lucide-react';
 import type { RecentMatch } from '../../api/types';
 import HeroIcon from '../common/HeroIcon';
@@ -48,44 +47,51 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
   });
 
   return (
-    <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-6 shadow-xl">
+    <div className="bg-gradient-to-b from-[#111520]/90 to-[#0c0f16]/95 border border-white/[0.08] hover:border-amber-500/25 rounded-2xl p-6 shadow-xl transition-all duration-300">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-2">
-          <Gamepad2 className="w-5 h-5 text-red-500" />
-          <h2 className="text-lg font-bold text-white tracking-tight">Partidas Recientes</h2>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-gray-400 font-mono">
-            {matches.length}
-          </span>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-amber-500/15 border border-amber-500/30">
+            <Swords className="w-5 h-5 text-amber-400" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-black text-white tracking-tight">Partidas Recientes</h2>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/[0.06] text-amber-300 font-mono font-bold border border-white/10">
+                {matches.length}
+              </span>
+            </div>
+            <span className="text-[11px] text-slate-400 font-mono">Historial competitivo y métricas de impacto</span>
+          </div>
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs font-medium">
+        <div className="flex items-center gap-1.5 bg-[#090b10] p-1.5 rounded-xl border border-white/[0.08] text-xs font-semibold">
           <button
             onClick={() => setFilter('all')}
-            className={`px-3 py-1 rounded-lg transition ${
+            className={`px-3.5 py-1.5 rounded-lg transition-all ${
               filter === 'all'
-                ? 'bg-slate-800 text-white shadow-sm'
-                : 'text-gray-400 hover:text-gray-200'
+                ? 'bg-amber-500 text-slate-950 font-black shadow-sm'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
             Todas
           </button>
           <button
             onClick={() => setFilter('win')}
-            className={`px-3 py-1 rounded-lg transition ${
+            className={`px-3.5 py-1.5 rounded-lg transition-all ${
               filter === 'win'
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                : 'text-gray-400 hover:text-gray-200'
+                ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 font-bold'
+                : 'text-slate-400 hover:text-emerald-400'
             }`}
           >
             Victorias
           </button>
           <button
             onClick={() => setFilter('loss')}
-            className={`px-3 py-1 rounded-lg transition ${
+            className={`px-3.5 py-1.5 rounded-lg transition-all ${
               filter === 'loss'
-                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                : 'text-gray-400 hover:text-gray-200'
+                ? 'bg-rose-500/25 text-rose-300 border border-rose-500/40 font-bold'
+                : 'text-slate-400 hover:text-rose-400'
             }`}
           >
             Derrotas
@@ -94,7 +100,7 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
       </div>
 
       {filteredMatches.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-slate-500 font-medium">
           No se encontraron partidas con el filtro seleccionado.
         </div>
       ) : (
@@ -109,17 +115,21 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
               return (
                 <div
                   key={match.match_id}
-                  className="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3.5 space-y-3"
+                  className={`bg-[#090c12]/90 border rounded-2xl p-4 space-y-3 transition ${
+                    won ? 'border-emerald-500/25 hover:border-emerald-500/45' : 'border-rose-500/25 hover:border-rose-500/45'
+                  }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       <HeroIcon heroId={match.hero_id} size="md" />
                       <div className="min-w-0">
-                        <div className="font-bold text-sm text-gray-200 truncate">
+                        <div className="font-bold text-sm text-slate-100 truncate">
                           {heroName}
                         </div>
-                        <div className="text-[11px] text-gray-500 flex items-center gap-1.5">
-                          <span>{radiant ? 'Radiant' : 'Dire'}</span>
+                        <div className="text-[11px] text-slate-400 flex items-center gap-1.5 font-mono">
+                          <span className={radiant ? 'text-emerald-400' : 'text-rose-400'}>
+                            {radiant ? 'Radiant' : 'Dire'}
+                          </span>
                           <span>•</span>
                           <span>{formatTimeAgo(match.start_time)}</span>
                         </div>
@@ -128,18 +138,18 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       {Boolean(match.version != null && match.version > 0) && (
                         <span
-                          className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
-                          title="Partida analizada con telemetría completa (wards, log de compras y timelines disponibles)"
+                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+                          title="Partida analizada"
                         >
                           <CheckCircle2 className="w-3 h-3 text-cyan-400" />
                           <span>Parseada</span>
                         </span>
                       )}
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase flex-shrink-0 ${
+                        className={`text-[10px] font-black px-2.5 py-1 rounded-lg uppercase flex-shrink-0 font-mono ${
                           won
-                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                            : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                         }`}
                       >
                         {won ? 'Victoria' : 'Derrota'}
@@ -147,34 +157,34 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 py-2 px-2.5 rounded-lg bg-slate-900/60 border border-slate-800/50 text-xs font-mono text-center">
+                  <div className="grid grid-cols-3 gap-2 py-2.5 px-3 rounded-xl bg-[#0e121a] border border-white/[0.04] text-xs font-mono text-center">
                     <div>
-                      <span className="text-[10px] text-gray-500 block">KDA</span>
-                      <span className="font-semibold text-gray-200">
+                      <span className="text-[10px] text-slate-500 block font-bold">KDA</span>
+                      <span className="font-bold text-slate-100">
                         {match.kills}/{match.deaths}/{match.assists}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-gray-500 block">GPM / XPM</span>
-                      <span className="font-semibold text-amber-400">
-                        {match.gold_per_min} <span className="text-sky-400">/ {match.xp_per_min}</span>
+                      <span className="text-[10px] text-slate-500 block font-bold">GPM / XPM</span>
+                      <span className="font-bold text-amber-400">
+                        {match.gold_per_min} <span className="text-cyan-400">/ {match.xp_per_min}</span>
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-gray-500 block">Duración</span>
-                      <span className="text-gray-300 font-semibold">
+                      <span className="text-[10px] text-slate-500 block font-bold">DURACIÓN</span>
+                      <span className="text-slate-300 font-bold">
                         {formatDuration(match.duration)}
                       </span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-[11px] text-gray-400 truncate">
+                    <span className="text-[11px] text-slate-400 truncate font-mono">
                       {getGameModeName(match.game_mode)}
                     </span>
                     <Link
                       to={`/match/${match.match_id}`}
-                      className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-red-600/90 hover:bg-red-500 text-white transition shadow-sm"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white transition shadow-md shadow-red-950/40"
                     >
                       <span>Analizar</span>
                       <ChevronRight className="w-3.5 h-3.5" />
@@ -189,16 +199,16 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
           <div className="hidden md:block overflow-x-auto -mx-6 px-6">
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
-                <tr className="border-b border-slate-800/80 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                  <th className="pb-3 pl-2">Resultado / Héroe</th>
-                  <th className="pb-3">Tipo / Modo</th>
-                  <th className="pb-3 text-center">Duración</th>
-                  <th className="pb-3">KDA</th>
-                  <th className="pb-3 text-right">GPM / XPM</th>
-                  <th className="pb-3 text-right pr-2">Acción</th>
+                <tr className="border-b border-white/[0.08] text-[11px] font-extrabold text-slate-400 uppercase tracking-wider font-mono">
+                  <th className="pb-3.5 pl-3">Resultado / Héroe</th>
+                  <th className="pb-3.5">Modo de Juego</th>
+                  <th className="pb-3.5 text-center">Duración</th>
+                  <th className="pb-3.5">KDA</th>
+                  <th className="pb-3.5 text-right">GPM / XPM</th>
+                  <th className="pb-3.5 text-right pr-3">Telemetría</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50">
+              <tbody className="divide-y divide-white/[0.04]">
                 {filteredMatches.map((match) => {
                   const won = didWin(match.player_slot, match.radiant_win);
                   const radiant = isRadiant(match.player_slot);
@@ -207,43 +217,45 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
                   return (
                     <tr
                       key={match.match_id}
-                      className="hover:bg-slate-800/40 transition-colors group"
+                      className="hover:bg-white/[0.03] transition-colors group"
                     >
                       {/* Hero & Result */}
-                      <td className="py-3 pl-2">
-                        <div className="flex items-center gap-3">
+                      <td className="py-3.5 pl-3">
+                        <div className="flex items-center gap-3.5">
                           <div
-                            className={`w-1 self-stretch rounded-full ${
-                              won ? 'bg-emerald-500' : 'bg-rose-500'
+                            className={`w-1.5 self-stretch rounded-full ${
+                              won ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-rose-500 shadow-sm shadow-rose-500/50'
                             }`}
                           />
                           <HeroIcon heroId={match.hero_id} size="md" />
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-semibold text-sm text-gray-200 group-hover:text-white transition">
+                              <span className="font-bold text-sm text-slate-100 group-hover:text-amber-300 transition-colors">
                                 {heroName}
                               </span>
                               <span
-                                className={`text-[10px] font-bold px-1.5 py-0.2 rounded uppercase ${
+                                className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase font-mono ${
                                   won
-                                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                                    : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                    : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                                 }`}
                               >
                                 {won ? 'Victoria' : 'Derrota'}
                               </span>
                               {Boolean(match.version != null && match.version > 0) && (
                                 <span
-                                  className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
-                                  title="Partida parseada con telemetría de repetición (visión, logs, gráficos por minuto)"
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
+                                  title="Partida analizada"
                                 >
                                   <CheckCircle2 className="w-2.5 h-2.5 text-cyan-400" />
                                   <span>Parseada</span>
                                 </span>
                               )}
                             </div>
-                            <div className="text-[11px] text-gray-500 flex items-center gap-2 mt-0.5">
-                              <span>{radiant ? 'Radiant' : 'Dire'}</span>
+                            <div className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5 font-mono">
+                              <span className={radiant ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
+                                {radiant ? 'Radiant' : 'Dire'}
+                              </span>
                               <span>•</span>
                               <span>{formatTimeAgo(match.start_time)}</span>
                             </div>
@@ -252,25 +264,25 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
                       </td>
 
                       {/* Mode & Lobby */}
-                      <td className="py-3">
-                        <div className="text-xs font-medium text-gray-300">
+                      <td className="py-3.5">
+                        <div className="text-xs font-bold text-slate-200">
                           {getGameModeName(match.game_mode)}
                         </div>
-                        <div className="text-[11px] text-gray-500">
+                        <div className="text-[11px] text-slate-400 font-mono">
                           {getLobbyTypeName(match.lobby_type)}
                         </div>
                       </td>
 
                       {/* Duration */}
-                      <td className="py-3 text-center">
-                        <div className="inline-flex items-center gap-1 text-xs font-mono text-gray-300">
-                          <Clock className="w-3.5 h-3.5 text-gray-500" />
+                      <td className="py-3.5 text-center">
+                        <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-slate-200 bg-[#090b10] px-2.5 py-1 rounded-lg border border-white/[0.05]">
+                          <Clock className="w-3.5 h-3.5 text-amber-500/80" />
                           {formatDuration(match.duration)}
                         </div>
                       </td>
 
                       {/* KDA */}
-                      <td className="py-3">
+                      <td className="py-3.5">
                         <KDABadge
                           kills={match.kills}
                           deaths={match.deaths}
@@ -279,22 +291,22 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
                       </td>
 
                       {/* GPM / XPM */}
-                      <td className="py-3 text-right">
-                        <div className="font-mono text-xs text-amber-400 font-semibold">
+                      <td className="py-3.5 text-right">
+                        <div className="font-mono text-xs text-amber-400 font-bold">
                           {match.gold_per_min}{' '}
-                          <span className="text-[10px] font-normal text-gray-500">GPM</span>
+                          <span className="text-[10px] font-normal text-slate-500">GPM</span>
                         </div>
-                        <div className="font-mono text-[11px] text-sky-400">
+                        <div className="font-mono text-[11px] text-cyan-400 font-bold">
                           {match.xp_per_min}{' '}
-                          <span className="text-[10px] text-gray-500">XPM</span>
+                          <span className="text-[10px] font-normal text-slate-500">XPM</span>
                         </div>
                       </td>
 
                       {/* Action */}
-                      <td className="py-3 text-right pr-2">
+                      <td className="py-3.5 text-right pr-3">
                         <Link
                           to={`/match/${match.match_id}`}
-                          className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-red-600/90 text-gray-300 hover:text-white transition shadow-sm"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-[#141924] hover:bg-gradient-to-r hover:from-red-600 hover:to-amber-600 border border-white/[0.08] hover:border-transparent text-slate-200 hover:text-white transition-all shadow-sm"
                         >
                           <span>Analizar</span>
                           <ChevronRight className="w-3.5 h-3.5" />
@@ -309,21 +321,21 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
 
           {/* Load More Button */}
           {hasMore && onLoadMore && (
-            <div className="mt-4 pt-4 border-t border-slate-800/80 text-center">
+            <div className="mt-5 pt-4 border-t border-white/[0.08] text-center">
               <button
                 onClick={onLoadMore}
                 disabled={loadingMore}
-                className="px-5 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-750 border border-slate-700/80 text-gray-200 hover:text-white font-medium text-xs transition shadow-sm inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="px-6 py-2.5 rounded-xl bg-[#121622] hover:bg-[#181f2f] border border-amber-500/30 hover:border-amber-500/60 text-amber-300 font-bold text-xs transition-all shadow-md inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {loadingMore ? (
                   <>
-                    <span className="w-3.5 h-3.5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
-                    <span>Cargando más partidas...</span>
+                    <span className="w-3.5 h-3.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                    <span>Cargando partidas...</span>
                   </>
                 ) : (
                   <>
                     <span>Cargar más partidas del historial</span>
-                    <ChevronRight className="w-4 h-4 text-red-400" />
+                    <ChevronRight className="w-4 h-4 text-amber-400" />
                   </>
                 )}
               </button>
