@@ -12,7 +12,7 @@ import Loading from '../components/common/Loading';
 export const DashboardPage: React.FC = () => {
   const { accountId: routeAccountId } = useParams<{ accountId: string }>();
   const navigate = useNavigate();
-  const { player, loading: playerLoading, setAccountId } = usePlayerContext();
+  const { player, loading: playerLoading, error: playerError, setAccountId } = usePlayerContext();
 
   const accountId = routeAccountId ? Number(routeAccountId) : null;
 
@@ -55,13 +55,13 @@ export const DashboardPage: React.FC = () => {
     );
   }
 
-  const isLoading = playerLoading || (statsLoading && !winLoss);
+  const isLoading = (playerLoading && !player && !playerError) || statsLoading;
 
   if (isLoading) {
     return <Loading message="Cargando estadísticas del jugador..." size="lg" />;
   }
 
-  const hasError = statsError || matchesError;
+  const hasError = statsError || matchesError || playerError;
 
   return (
     <div className="space-y-6">
