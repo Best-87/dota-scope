@@ -24,17 +24,23 @@ export const usePlayer = (accountId: number | null | undefined): UsePlayerResult
     setLoading(true);
     setError(null);
     try {
-      const [wlData, heroesData, totalsData, rankingsData] = await Promise.all([
+      const [wlRes, heroesRes, totalsRes, rankingsRes] = await Promise.allSettled([
         getWinLoss(id),
         getHeroes(id),
         getTotals(id),
         getRankings(id),
       ]);
 
-      setWinLoss(wlData ?? null);
-      setHeroes(Array.isArray(heroesData) ? heroesData : []);
-      setTotals(Array.isArray(totalsData) ? totalsData : []);
-      setRankings(Array.isArray(rankingsData) ? rankingsData : []);
+      setWinLoss(wlRes.status === 'fulfilled' && wlRes.value ? wlRes.value : null);
+      setHeroes(heroesRes.status === 'fulfilled' && Array.isArray(heroesRes.value) ? heroesRes.value : []);
+      setTotals(totalsRes.status === 'fulfilled' && Array.isArray(totalsRes.value) ? totalsRes.value : []);
+      setRankings(rankingsRes.status === 'fulfilled' && Array.isArray(rankingsRes.value) ? rankingsRes.value : []);
+
+      // Only set error if every single request failed
+      const allFailed = [wlRes, heroesRes, totalsRes, rankingsRes].every((r) => r.status === 'rejected');
+      if (allFailed) {
+        setError(new Error('No se pudieron obtener las estadísticas del jugador'));
+      }
     } catch (err: unknown) {
       const formattedError =
         err instanceof Error ? err : new Error(String(err) || 'Failed to fetch player stats');
@@ -60,18 +66,23 @@ export const usePlayer = (accountId: number | null | undefined): UsePlayerResult
     setLoading(true);
     setError(null);
 
-    Promise.all([
+    Promise.allSettled([
       getWinLoss(accountId),
       getHeroes(accountId),
       getTotals(accountId),
       getRankings(accountId),
     ])
-      .then(([wlData, heroesData, totalsData, rankingsData]) => {
+      .then(([wlRes, heroesRes, totalsRes, rankingsRes]) => {
         if (active) {
-          setWinLoss(wlData ?? null);
-          setHeroes(Array.isArray(heroesData) ? heroesData : []);
-          setTotals(Array.isArray(totalsData) ? totalsData : []);
-          setRankings(Array.isArray(rankingsData) ? rankingsData : []);
+          setWinLoss(wlRes.status === 'fulfilled' && wlRes.value ? wlRes.value : null);
+          setHeroes(heroesRes.status === 'fulfilled' && Array.isArray(heroesRes.value) ? heroesRes.value : []);
+          setTotals(totalsRes.status === 'fulfilled' && Array.isArray(totalsRes.value) ? totalsRes.value : []);
+          setRankings(rankingsRes.status === 'fulfilled' && Array.isArray(rankingsRes.value) ? rankingsRes.value : []);
+
+          const allFailed = [wlRes, heroesRes, totalsRes, rankingsRes].every((r) => r.status === 'rejected');
+          if (allFailed) {
+            setError(new Error('No se pudieron obtener las estadísticas del jugador'));
+          }
           setLoading(false);
         }
       })
