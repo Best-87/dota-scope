@@ -16,7 +16,6 @@ import type {
 } from './types';
 
 const BASE_URL = 'https://api.opendota.com/api';
-const DEFAULT_REQUEST_INTERVAL_MS = 250;
 const MAX_RETRIES = 2;
 
 /**
@@ -46,61 +45,42 @@ export class OpenDotaApiError extends Error {
 }
 
 /**
- * Request queue to rate limit API calls to max 1 per second.
+ * Concurrency-limited request pool.
+ * Allows up to MAX_CONCURRENT requests in parallel, with a small delay between
+ * batches to stay within OpenDota's free-tier rate limits (~60 req/min).
  */
-class RequestQueue {
-  private queue: Array<() => Promise<void>> = [];
-  private isProcessing = false;
-  private lastRequestTime = 0;
-  private readonly intervalMs: number;
+const MAX_CONCURRENT = 5;
 
-  constructor(intervalMs: number = DEFAULT_REQUEST_INTERVAL_MS) {
-    this.intervalMs = intervalMs;
-  }
+class RequestPool {
+  private active = 0;
+  private queue: Array<() => void> = [];
 
   public enqueue<T>(fn: () => Promise<T>): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-      this.queue.push(async () => {
-        try {
-          const result = await fn();
-          resolve(result);
-        } catch (error) {
-          reject(error);
-        }
-      });
-      this.processNext();
+      const run = () => {
+        this.active++;
+        fn()
+          .then(resolve)
+          .catch(reject)
+          .finally(() => {
+            this.active--;
+            if (this.queue.length > 0) {
+              const next = this.queue.shift();
+              if (next) next();
+            }
+          });
+      };
+
+      if (this.active < MAX_CONCURRENT) {
+        run();
+      } else {
+        this.queue.push(run);
+      }
     });
-  }
-
-  private async processNext(): Promise<void> {
-    if (this.isProcessing) return;
-    this.isProcessing = true;
-
-    while (this.queue.length > 0) {
-      const task = this.queue.shift();
-      if (!task) break;
-
-      const now = Date.now();
-      const elapsed = now - this.lastRequestTime;
-      if (elapsed < this.intervalMs) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, this.intervalMs - elapsed)
-        );
-      }
-      this.lastRequestTime = Date.now();
-
-      try {
-        await task();
-      } catch {
-        // Individual task errors are handled via reject() in enqueue
-      }
-    }
-
-    this.isProcessing = false;
   }
 }
 
-const requestQueue = new RequestQueue(DEFAULT_REQUEST_INTERVAL_MS);
+const requestQueue = new RequestPool();
 
 /**
  * Serializes query parameters into a query string.
