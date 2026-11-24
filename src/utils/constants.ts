@@ -104,10 +104,36 @@ export const LOBBY_TYPES: Record<number, string> = {
  * Common Dota 2 lane roles.
  */
 export const LANE_ROLES: Record<number, string> = {
-  1: 'Safe Lane',
-  2: 'Mid Lane',
-  3: 'Off Lane',
-  4: 'Jungle',
+  1: 'Safe Lane (Safelane)',
+  2: 'Mid Lane (Medio)',
+  3: 'Off Lane (Offlane)',
+  4: 'Jungle (Selva)',
+};
+
+/**
+ * OpenDota / Steam Cluster Regions.
+ */
+export const DOTA_REGIONS: Record<number, string> = {
+  1: 'US West',
+  2: 'US East',
+  3: 'Europe West',
+  4: 'SE Asia',
+  5: 'Singapore',
+  6: 'Dubai',
+  7: 'Australia',
+  8: 'Stockholm (Russia)',
+  9: 'Austria (Europe East)',
+  10: 'Brazil (South America)',
+  11: 'South Africa',
+  12: 'Madrid',
+  13: 'Taiwan',
+  14: 'Argentina',
+  15: 'Chile',
+  16: 'Peru',
+  17: 'India',
+  18: 'Japan',
+  19: 'China (Telecom)',
+  20: 'China (Unicom)',
 };
 
 /**

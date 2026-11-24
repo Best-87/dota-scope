@@ -7,6 +7,7 @@ import { usePlayerContext } from '../context/PlayerContext';
 import OverviewCard from '../components/dashboard/OverviewCard';
 import HeroGrid from '../components/dashboard/HeroGrid';
 import RecentMatches from '../components/dashboard/RecentMatches';
+import PlayerBreakdownStats from '../components/dashboard/PlayerBreakdownStats';
 import Loading from '../components/common/Loading';
 
 export const DashboardPage: React.FC = () => {
@@ -26,6 +27,7 @@ export const DashboardPage: React.FC = () => {
     winLoss,
     heroes,
     totals,
+    counts,
     loading: statsLoading,
     error: statsError,
     refetch: refetchStats,
@@ -146,6 +148,9 @@ export const DashboardPage: React.FC = () => {
 
       {/* Most Played Heroes Grid */}
       <HeroGrid heroes={heroes} accountId={accountId} limit={6} loading={statsLoading} />
+
+      {/* OpenDota Breakdown Stats (Game Mode, Role, Team, Region, Lobby) */}
+      <PlayerBreakdownStats counts={counts} loading={statsLoading} />
 
       {/* Recent Matches List with pagination */}
       <RecentMatches
