@@ -1,8 +1,6 @@
-// DotaScope Service Worker — v2.0.0
-// The CACHE_VERSION is bumped at build time via sed in the build script.
-// When a new SW is detected, the app shows an "Actualizar" button.
-// On click, the app posts { type: 'SKIP_WAITING' } to this SW.
-const CACHE_VERSION = '1794161013193';
+// DotaScope Service Worker — Auto-Update & Realtime Sync Engine
+// CACHE_VERSION updates automatically on build.
+const CACHE_VERSION = '1794161013200';
 const CACHE_NAME = 'dotascope-v' + CACHE_VERSION;
 
 const STATIC_ASSETS = [
@@ -18,7 +16,7 @@ const STATIC_ASSETS = [
 ];
 
 // ─── Install ──────────────────────────────────────────────────
-// Pre-cache the app shell and activate immediately so updates apply right away
+// Immediately skip waiting so newly deployed versions take over without delay
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -31,19 +29,28 @@ self.addEventListener('install', (event) => {
 });
 
 // ─── Activate ─────────────────────────────────────────────────
-// Delete ALL old caches and take control of all clients.
+// Delete ALL previous caches immediately, claim clients, and notify app of update
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('[SW] Purging old cache:', key);
+            console.log('[SW] Purging outdated cache:', key);
             return caches.delete(key);
           }
         })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => {
+      return self.clients.claim();
+    }).then(() => {
+      // Broadcast update event to all active open tabs
+      return self.clients.matchAll({ type: 'window' }).then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'SW_ACTIVATED', version: CACHE_VERSION });
+        });
+      });
+    })
   );
 });
 
@@ -52,7 +59,6 @@ let monitoredAccountId = null;
 let lastKnownMatchId = null;
 let knownParsedMatches = [];
 
-// Hero Name Mapping for standalone notifications when app is closed
 const HERO_NAMES = {
   1: "Anti-Mage", 2: "Axe", 3: "Bane", 4: "Bloodseeker", 5: "Crystal Maiden", 6: "Drow Ranger",
   7: "Earthshaker", 8: "Juggernaut", 9: "Mirana", 10: "Morphling", 11: "Shadow Fiend",
@@ -82,7 +88,6 @@ function getHeroName(id) {
   return HERO_NAMES[id] || (id ? 'Héroe #' + id : 'Héroe');
 }
 
-// Background poller that checks OpenDota directly from the Service Worker
 async function checkMatchesInBackground() {
   if (!monitoredAccountId) return;
   try {
@@ -93,7 +98,6 @@ async function checkMatchesInBackground() {
 
     const newest = matches[0];
 
-    // Seed state if first run
     if (!lastKnownMatchId) {
       lastKnownMatchId = newest.match_id;
       matches.slice(0, 10).forEach((m) => {
@@ -102,7 +106,6 @@ async function checkMatchesInBackground() {
       return;
     }
 
-    // Check for newly finished matches
     if (newest.match_id !== lastKnownMatchId) {
       const newMatches = matches.filter((m) => m.match_id > lastKnownMatchId);
       for (const m of newMatches) {
@@ -125,7 +128,6 @@ async function checkMatchesInBackground() {
       lastKnownMatchId = newest.match_id;
     }
 
-    // Check for newly parsed matches
     for (const m of matches.slice(0, 8)) {
       if (m.version && m.version > 0 && !knownParsedMatches.includes(m.match_id)) {
         knownParsedMatches.push(m.match_id);
@@ -148,7 +150,6 @@ async function checkMatchesInBackground() {
   }
 }
 
-// Keep an autonomous interval running in SW execution context
 let backgroundTimer = null;
 function startSwPolling() {
   if (backgroundTimer) clearInterval(backgroundTimer);
@@ -173,14 +174,12 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Periodic Background Sync (Native PWA Android Chrome / WebView)
 self.addEventListener('periodicsync', (event) => {
   if (event.tag === 'check-dota-matches') {
     event.waitUntil(checkMatchesInBackground());
   }
 });
 
-// Regular Background Sync (Triggered when network returns or OS wakes SW)
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-dota-matches') {
     event.waitUntil(checkMatchesInBackground());
@@ -188,7 +187,6 @@ self.addEventListener('sync', (event) => {
 });
 
 // ─── Push Notifications ───────────────────────────────────────
-// Handles incoming push messages (background or simulated push).
 self.addEventListener('push', (event) => {
   let data = { title: 'DotaScope', body: 'Tienes una actualización táctica disponible.' };
   if (event.data) {
@@ -209,21 +207,14 @@ self.addEventListener('push', (event) => {
       tag: data.tag || `dotascope-${Date.now()}`,
       renotify: true,
       data: { url: targetUrl, matchId: data.matchId, accountId: data.accountId },
-      // WhatsApp-style vibration: buzz-pause-buzz
       vibrate: [200, 100, 200],
-      actions: [
-        { action: 'open', title: 'Ver Partida' }
-      ]
+      actions: [{ action: 'open', title: 'Ver Partida' }]
     })
   );
 });
 
-// ─── Notification Click ────────────────────────────────────────
-// Opens or brings to front the app when the user taps a mobile notification.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-
-  // Resolve destination relative to registration scope to prevent loading sw.js as a page
   const rawPath = event.notification.data?.url || './';
   let targetUrl;
   try {
@@ -234,7 +225,6 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // If a window is already open under this origin/scope, focus it and navigate
       for (const client of clientList) {
         if ('focus' in client) {
           if ('navigate' in client) {
@@ -243,7 +233,6 @@ self.addEventListener('notificationclick', (event) => {
           return client.focus();
         }
       }
-      // Otherwise open a new window pointing to the app
       if (self.clients.openWindow) {
         return self.clients.openWindow(targetUrl);
       }
@@ -252,16 +241,17 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 // ─── Fetch Strategy ───────────────────────────────────────────
-// Navigation: Network-first (fresh content) → cache fallback
-// APIs: Network-first → cache fallback (offline support)
-// Static: Stale-while-revalidate
+// 1. Navigation (HTML): ALWAYS Network-first to guarantee latest app version
+// 2. Bundled JS/CSS assets (hashed by Vite): Stale-while-revalidate / Cache-first
+// 3. External APIs: Network-first with cache fallback
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   if (event.request.method !== 'GET') return;
 
-  // 1. HTML Navigation
-  if (event.request.mode === 'navigate') {
+  // 1. HTML Navigation & index.html: Network-first
+  // When an update is deployed, user receives the new index.html immediately!
+  if (event.request.mode === 'navigate' || url.pathname.endsWith('/index.html') || url.pathname === '/') {
     event.respondWith(
       fetch(event.request)
         .then((networkResponse) => {
@@ -294,7 +284,25 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Static Assets — Stale-while-revalidate
+  // 3. Hashed assets (assets/*.js, assets/*.css): Cache-first with network fallback
+  // Since Vite attaches unique hashes (e.g. index-Bw7RkDIv.css), these are immutable
+  if (url.pathname.includes('/assets/')) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) return cachedResponse;
+        return fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
+
+  // 4. Default: Stale-while-revalidate
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request)

@@ -1,28 +1,66 @@
 import { useState, useEffect, useCallback } from 'react';
 
 /**
- * Hook to detect service worker updates and provide an update function.
+ * Hook to automatically apply Service Worker updates silently without manual cache clearing.
  *
- * Returns:
- * - isUpdateAvailable: true when a new SW is waiting to activate.
- * - updateApp: clears all caches, tells the waiting SW to skipWaiting,
- *   then reloads the page so the new version takes over.
- * - isUpdating: true while the update is in progress (for UI spinner).
+ * Capabilities:
+ * - Checks for updates every 30 seconds and when the tab regains focus or network reconnects.
+ * - Automatically purges stale caches and activates the new worker immediately.
+ * - Provides `isUpdateAvailable`, `updateApp`, and `isUpdating` for UI feedback.
  */
 export function usePwaUpdate() {
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  const purgeCachesAndActivate = useCallback(async (workerToActivate?: ServiceWorker | null) => {
+    setIsUpdating(true);
+    try {
+      // 1. Purge all CacheStorage caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map((name) => caches.delete(name)));
+      }
+
+      // 2. Clear volatile API caches from localStorage
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('dotascope_constants') || key.startsWith('ds_cache_'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+
+      // 3. Command the waiting worker to skip waiting
+      const targetWorker = workerToActivate || waitingWorker;
+      if (targetWorker) {
+        targetWorker.postMessage({ type: 'SKIP_WAITING' });
+      } else {
+        window.location.reload();
+      }
+    } catch (err) {
+      console.warn('[PWA AutoUpdate] Error during cache purge:', err);
+      window.location.reload();
+    }
+  }, [waitingWorker]);
+
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
 
     let registration: ServiceWorkerRegistration | null = null;
 
+    const handleWaitingWorker = (worker: ServiceWorker) => {
+      setWaitingWorker(worker);
+      setIsUpdateAvailable(true);
+      // Auto-apply update seamlessly if tab has just loaded or user is idle
+      console.log('[PWA] Nueva versión detectada, aplicando actualización automática...');
+      purgeCachesAndActivate(worker);
+    };
+
     const trackWaiting = (reg: ServiceWorkerRegistration) => {
       if (reg.waiting) {
-        setWaitingWorker(reg.waiting);
-        setIsUpdateAvailable(true);
+        handleWaitingWorker(reg.waiting);
       }
     };
 
@@ -33,14 +71,12 @@ export function usePwaUpdate() {
 
       installing.addEventListener('statechange', () => {
         if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-          // New SW installed but waiting — update available
-          setWaitingWorker(installing);
-          setIsUpdateAvailable(true);
+          handleWaitingWorker(installing);
         }
       });
     };
 
-    // When the active controller changes (new SW took over) → reload
+    // Controller change means the new SW took over
     let refreshing = false;
     const onControllerChange = () => {
       if (refreshing) return;
@@ -48,66 +84,66 @@ export function usePwaUpdate() {
       window.location.reload();
     };
 
+    // Broadcast messages from Service Worker
+    const onSwMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'SW_ACTIVATED') {
+        console.log('[PWA] Service Worker actualizado a versión:', event.data.version);
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      }
+    };
+
     navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+    navigator.serviceWorker.addEventListener('message', onSwMessage);
 
     navigator.serviceWorker.ready
       .then((reg) => {
         registration = reg;
-        // Check if there's already a waiting SW
         trackWaiting(reg);
         reg.addEventListener('updatefound', onUpdateFound);
 
-        // Periodically check for updates (every 60 seconds)
+        // Immediate check on start
+        reg.update().catch(() => {});
+
+        // Check for updates periodically (every 30 seconds)
         const interval = setInterval(() => {
           reg.update().catch(() => {});
-        }, 60_000);
+        }, 30_000);
 
-        return () => clearInterval(interval);
+        // Also check whenever user returns to the tab or comes back online
+        const handleVisibilityChange = () => {
+          if (document.visibilityState === 'visible') {
+            reg.update().catch(() => {});
+          }
+        };
+        const handleOnline = () => {
+          reg.update().catch(() => {});
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('online', handleOnline);
+
+        return () => {
+          clearInterval(interval);
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+          window.removeEventListener('online', handleOnline);
+        };
       })
       .catch((err) => {
-        console.warn('[PWA Update] Error:', err);
+        console.warn('[PWA Update] Setup error:', err);
       });
 
     return () => {
       navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+      navigator.serviceWorker.removeEventListener('message', onSwMessage);
     };
-  }, []);
+  }, [purgeCachesAndActivate]);
 
-  /**
-   * Perform the update:
-   * 1. Clear all caches
-   * 2. Tell the waiting SW to skip waiting
-   * 3. The controllerchange listener will reload the page
-   */
   const updateApp = useCallback(async () => {
-    if (!waitingWorker) return;
-    setIsUpdating(true);
-
-    try {
-      // 1. Purge all caches
-      const cacheNames = await caches.keys();
-      await Promise.all(cacheNames.map((name) => caches.delete(name)));
-
-      // 2. Clear localStorage caches for API data (hero/item constants, etc.)
-      const keysToRemove: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (key.startsWith('dotascope_') || key.startsWith('ds_cache_'))) {
-          keysToRemove.push(key);
-        }
-      }
-      keysToRemove.forEach((k) => localStorage.removeItem(k));
-
-      // 3. Tell the waiting SW to take over
-      waitingWorker.postMessage({ type: 'SKIP_WAITING' });
-
-      // The controllerchange listener in the useEffect will reload the page automatically
-    } catch (err) {
-      console.error('[PWA Update] Error updating:', err);
-      // Fallback: force reload anyway
-      window.location.reload();
-    }
-  }, [waitingWorker]);
+    await purgeCachesAndActivate();
+  }, [purgeCachesAndActivate]);
 
   return { isUpdateAvailable, updateApp, isUpdating };
 }
