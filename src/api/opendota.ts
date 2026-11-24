@@ -276,10 +276,16 @@ export async function getTotals(
 
 /**
  * Fetches match count breakdowns by category (game mode, lane, lobby type, etc.).
+ * @param accountId  - OpenDota account ID.
+ * @param params     - Optional filters: `limit` (number of recent matches) or `date` (days ago).
  */
-export async function getCounts(accountId: number): Promise<PlayerCount> {
+export async function getCounts(
+  accountId: number,
+  params?: { limit?: number; date?: number }
+): Promise<PlayerCount> {
+  const qs = buildQueryString(params);
   return fetchWithRetry<PlayerCount>(
-    `${BASE_URL}/players/${accountId}/counts`
+    `${BASE_URL}/players/${accountId}/counts${qs}`
   );
 }
 

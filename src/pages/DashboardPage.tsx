@@ -150,7 +150,7 @@ export const DashboardPage: React.FC = () => {
       <HeroGrid heroes={heroes} accountId={accountId} limit={6} loading={statsLoading} />
 
       {/* OpenDota Breakdown Stats (Game Mode, Role, Team, Region, Lobby) */}
-      <PlayerBreakdownStats counts={counts} loading={statsLoading} />
+      <PlayerBreakdownStats counts={counts} loading={statsLoading} accountId={accountId} />
 
       {/* Recent Matches List with pagination */}
       <RecentMatches
