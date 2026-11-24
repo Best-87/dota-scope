@@ -1,6 +1,6 @@
 // DotaScope Service Worker — Auto-Update & Realtime Sync Engine
 // CACHE_VERSION updates automatically on build.
-const CACHE_VERSION = '1794161013200';
+const CACHE_VERSION = '1795488886135';
 const CACHE_NAME = 'dotascope-v' + CACHE_VERSION;
 
 const STATIC_ASSETS = [
