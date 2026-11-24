@@ -104,10 +104,12 @@ export const LOBBY_TYPES: Record<number, string> = {
  * Common Dota 2 lane roles.
  */
 export const LANE_ROLES: Record<number, string> = {
-  1: 'Safe Lane (Safelane)',
-  2: 'Mid Lane (Medio)',
-  3: 'Off Lane (Offlane)',
-  4: 'Jungle (Selva)',
+  0: 'Roaming / Sin rol',
+  1: 'Safe Lane (Carry)',
+  2: 'Mid Lane',
+  3: 'Off Lane',
+  4: 'Jungle',
+  5: 'Roaming (Support)',
 };
 
 /**

@@ -45,13 +45,14 @@ const factionMap: Record<string, string> = { '0': 'Dire', '1': 'Radiant' };
 
 function getSortedCategory(
   data: Record<string, { games: number; win: number }> | undefined,
-  nameMap: Record<number | string, string>
+  nameMap: Record<number | string, string>,
+  fallbackPrefix = 'Modo'
 ) {
   if (!data) return [];
   return Object.entries(data)
     .map(([key, val]) => {
       const id = Number(key);
-      const name = nameMap[id] ?? nameMap[key] ?? `ID ${key}`;
+      const name = nameMap[id] ?? nameMap[key] ?? `${fallbackPrefix} desconocido (${key})`;
       const wr = val.games > 0 ? (val.win / val.games) * 100 : 0;
       return {
         id: key,
@@ -191,8 +192,20 @@ export const PlayerBreakdownStats: React.FC<PlayerBreakdownStatsProps> = ({
     lobby_type: 'lobby_type',
   };
 
+  const fallbackByTab: Record<TabKey, string> = {
+    game_mode:  'Modo',
+    lane_role:  'Rol',
+    region:     'Región',
+    team:       'Bando',
+    lobby_type: 'Lobby',
+  };
+
   const getList = (source: PlayerCount | null, tab: TabKey) =>
-    getSortedCategory(source?.[countFieldByTab[tab]] as Record<string, {games:number;win:number}> | undefined, nameMapByTab[tab]);
+    getSortedCategory(
+      source?.[countFieldByTab[tab]] as Record<string, {games:number;win:number}> | undefined,
+      nameMapByTab[tab],
+      fallbackByTab[tab]
+    );
 
   const allTimeList = getList(allTimeCounts, activeTab);
   const periodList  = isFiltered ? getList(periodCounts, activeTab) : allTimeList;
