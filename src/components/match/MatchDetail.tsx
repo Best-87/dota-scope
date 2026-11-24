@@ -4,6 +4,7 @@ import {
   Trophy,
   Swords,
   Clock,
+  Calendar,
   Sparkles,
   ExternalLink,
   Shield,
@@ -16,6 +17,7 @@ import ItemIcon from '../common/ItemIcon';
 import KDABadge from '../common/KDABadge';
 import {
   formatDuration,
+  formatMatchDateTime,
   formatTimeAgo,
   getGameModeName,
   getLobbyTypeName,
@@ -292,7 +294,7 @@ export const MatchDetailComponent: React.FC<MatchDetailProps> = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-4 mt-2 text-xs text-gray-400 font-medium">
+          <div className="flex items-center gap-4 mt-2 text-xs text-gray-400 font-medium flex-wrap">
             <span className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-gray-500" />
               Duración: <strong className="text-gray-200">{formatDuration(match.duration)}</strong>
@@ -302,7 +304,10 @@ export const MatchDetailComponent: React.FC<MatchDetailProps> = ({
             <span>•</span>
             <span>{getLobbyTypeName(match.lobby_type)}</span>
             <span>•</span>
-            <span>{formatTimeAgo(match.start_time)}</span>
+            <span className="flex items-center gap-1.5 text-amber-400 font-semibold font-mono">
+              <Calendar className="w-3.5 h-3.5" />
+              {formatMatchDateTime(match.start_time)}
+            </span>
           </div>
         </div>
 

@@ -28,6 +28,64 @@ export function formatDuration(seconds: number): string {
 }
 
 /**
+ * Formats a UNIX timestamp (seconds or milliseconds) into an exact localized date and time.
+ * Example: "24 nov 2026, 17:35" or "24/11/2026 • 17:35"
+ */
+export function formatMatchDateTime(timestamp: number): string {
+  if (!timestamp || Number.isNaN(timestamp)) {
+    return 'Fecha desconocida';
+  }
+
+  const ms = timestamp < 1e11 ? timestamp * 1000 : timestamp;
+  const date = new Date(ms);
+
+  return date.toLocaleString('es-ES', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+}
+
+/**
+ * Formats a UNIX timestamp into exact date only (e.g., "24 nov 2026").
+ */
+export function formatExactDate(timestamp: number): string {
+  if (!timestamp || Number.isNaN(timestamp)) {
+    return 'Fecha desconocida';
+  }
+
+  const ms = timestamp < 1e11 ? timestamp * 1000 : timestamp;
+  const date = new Date(ms);
+
+  return date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+/**
+ * Formats a UNIX timestamp into exact time only (e.g., "17:35").
+ */
+export function formatExactTime(timestamp: number): string {
+  if (!timestamp || Number.isNaN(timestamp)) {
+    return '--:--';
+  }
+
+  const ms = timestamp < 1e11 ? timestamp * 1000 : timestamp;
+  const date = new Date(ms);
+
+  return date.toLocaleTimeString('es-ES', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+}
+
+/**
  * Formats a UNIX timestamp (seconds or milliseconds) into relative time.
  * Example: "just now", "45 minutes ago", "2 hours ago", "3 days ago", "1 month ago"
  */

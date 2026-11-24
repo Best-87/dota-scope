@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Gamepad2,
   Clock,
+  Calendar,
   ChevronRight,
   CheckCircle2,
   Swords,
@@ -13,6 +14,7 @@ import HeroIcon from '../common/HeroIcon';
 import KDABadge from '../common/KDABadge';
 import {
   formatDuration,
+  formatMatchDateTime,
   formatTimeAgo,
   getGameModeName,
   getLobbyTypeName,
@@ -126,12 +128,15 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
                         <div className="font-bold text-sm text-slate-100 truncate">
                           {heroName}
                         </div>
-                        <div className="text-[11px] text-slate-400 flex items-center gap-1.5 font-mono">
-                          <span className={radiant ? 'text-emerald-400' : 'text-rose-400'}>
+                        <div className="text-[11px] text-slate-400 flex items-center gap-1.5 font-mono flex-wrap">
+                          <span className={radiant ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
                             {radiant ? 'Radiant' : 'Dire'}
                           </span>
                           <span>•</span>
-                          <span>{formatTimeAgo(match.start_time)}</span>
+                          <span className="flex items-center gap-1 text-slate-300">
+                            <Calendar className="w-3 h-3 text-amber-500/80" />
+                            {formatMatchDateTime(match.start_time)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -257,7 +262,10 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
                                 {radiant ? 'Radiant' : 'Dire'}
                               </span>
                               <span>•</span>
-                              <span>{formatTimeAgo(match.start_time)}</span>
+                              <span className="flex items-center gap-1 text-slate-300">
+                                <Calendar className="w-3 h-3 text-amber-500/80" />
+                                {formatMatchDateTime(match.start_time)}
+                              </span>
                             </div>
                           </div>
                         </div>
