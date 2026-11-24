@@ -104,18 +104,18 @@ export const LOBBY_TYPES: Record<number, string> = {
  * Common Dota 2 lane roles.
  */
 export const LANE_ROLES: Record<number, string> = {
-  0: 'Roaming / Sin rol',
-  1: 'Safe Lane (Carry)',
-  2: 'Mid Lane',
-  3: 'Off Lane',
+  0: 'Sin datos (No parseada)',
+  1: 'Safe Lane (Pos 1 / Pos 5)',
+  2: 'Mid Lane (Pos 2)',
+  3: 'Off Lane (Pos 3 / Pos 4)',
   4: 'Jungle',
-  5: 'Roaming (Support)',
 };
 
 /**
  * OpenDota / Steam Cluster Regions.
  */
 export const DOTA_REGIONS: Record<number, string> = {
+  0: 'Sin región / Desconocida',
   1: 'US West',
   2: 'US East',
   3: 'Europe West',

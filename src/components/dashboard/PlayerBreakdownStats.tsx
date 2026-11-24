@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Gamepad2,
   Globe,
@@ -12,6 +13,8 @@ import {
   TrendingDown,
   Minus,
   Calendar,
+  Info,
+  ArrowRight,
 } from 'lucide-react';
 import type { PlayerCount } from '../../api/types';
 import { getCounts } from '../../api/opendota';
@@ -369,6 +372,27 @@ export const PlayerBreakdownStats: React.FC<PlayerBreakdownStatsProps> = ({
               </span>
             )}
           </div>
+
+          {/* Lane role info note */}
+          {activeTab === 'lane_role' && (
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl bg-sky-500/[0.07] border border-sky-500/20 text-xs text-slate-300">
+              <div className="flex items-start sm:items-center gap-2">
+                <Info className="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5 sm:mt-0" />
+                <span>
+                  OpenDota agrupa este resumen por <strong className="text-white">carril</strong> (Safe incluye Pos 1 y 5; Off incluye Pos 3 y 4) y marca como <strong className="text-white">Sin datos</strong> las partidas sin replay parseado.
+                </span>
+              </div>
+              {accountId && (
+                <Link
+                  to={`/analysis/${accountId}`}
+                  className="inline-flex items-center gap-1 text-amber-400 hover:text-amber-300 font-bold whitespace-nowrap self-end sm:self-auto"
+                >
+                  <span>Ver Pos 1–5 en Análisis Pro</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              )}
+            </div>
+          )}
 
           {/* ── Stat Cards Grid ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
