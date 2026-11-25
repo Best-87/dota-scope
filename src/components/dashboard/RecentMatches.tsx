@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Gamepad2,
   Clock,
   Calendar,
   ChevronRight,
   CheckCircle2,
   Swords,
-  TrendingUp,
+  Loader2,
+  Sparkles,
 } from 'lucide-react';
 import type { RecentMatch } from '../../api/types';
+import { requestParse, getMatch } from '../../api/opendota';
 import HeroIcon from '../common/HeroIcon';
 import KDABadge from '../common/KDABadge';
 import {
@@ -40,6 +41,90 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
 }) => {
   const { getHeroName } = useConstants();
   const [filter, setFilter] = useState<'all' | 'win' | 'loss'>('all');
+  const [parseStates, setParseStates] = useState<
+    Record<number, 'idle' | 'requesting' | 'polling' | 'parsed' | 'error'>
+  >({});
+  const pollTimersRef = useRef<Record<number, ReturnType<typeof setInterval>>>({});
+
+  useEffect(() => {
+    const timers = pollTimersRef.current;
+    return () => {
+      Object.values(timers).forEach(clearInterval);
+    };
+  }, []);
+
+  const handleRequestParse = async (matchId: number) => {
+    const current = parseStates[matchId];
+    if (current === 'requesting' || current === 'polling' || current === 'parsed') return;
+
+    setParseStates((prev) => ({ ...prev, [matchId]: 'requesting' }));
+    try {
+      await requestParse(matchId);
+      setParseStates((prev) => ({ ...prev, [matchId]: 'polling' }));
+
+      let attempts = 0;
+      const timer = setInterval(async () => {
+        attempts += 1;
+        try {
+          const detail = await getMatch(matchId);
+          if (detail?.version != null && detail.version > 0) {
+            clearInterval(timer);
+            delete pollTimersRef.current[matchId];
+            setParseStates((prev) => ({ ...prev, [matchId]: 'parsed' }));
+            return;
+          }
+        } catch {
+          // Ignore transient polling errors
+        }
+        if (attempts >= 15) {
+          clearInterval(timer);
+          delete pollTimersRef.current[matchId];
+          setParseStates((prev) => ({ ...prev, [matchId]: 'idle' }));
+        }
+      }, 5000);
+
+      pollTimersRef.current[matchId] = timer;
+    } catch {
+      setParseStates((prev) => ({ ...prev, [matchId]: 'error' }));
+    }
+  };
+
+  const renderParseButton = (matchId: number, isParsed: boolean) => {
+    if (isParsed) return null;
+    const status = parseStates[matchId] || 'idle';
+    const isBusy = status === 'requesting' || status === 'polling';
+
+    return (
+      <button
+        type="button"
+        onClick={() => handleRequestParse(matchId)}
+        disabled={isBusy}
+        title="Solicitar parseo de replay a OpenDota"
+        className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition-all ${
+          status === 'error'
+            ? 'bg-rose-500/15 border-rose-500/40 text-rose-300 hover:bg-rose-500/25'
+            : isBusy
+            ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300 cursor-wait'
+            : 'bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/30 hover:border-cyan-400/60 text-cyan-300'
+        }`}
+      >
+        {isBusy ? (
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        ) : (
+          <Sparkles className="w-3.5 h-3.5" />
+        )}
+        <span>
+          {status === 'requesting'
+            ? 'Enviando...'
+            : status === 'polling'
+            ? 'Parseando...'
+            : status === 'error'
+            ? 'Reintentar'
+            : 'Parsear'}
+        </span>
+      </button>
+    );
+  };
 
   const filteredMatches = matches.filter((m) => {
     const won = didWin(m.player_slot, m.radiant_win);
@@ -113,6 +198,9 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
               const won = didWin(match.player_slot, match.radiant_win);
               const radiant = isRadiant(match.player_slot);
               const heroName = getHeroName(match.hero_id);
+              const isParsed =
+                Boolean(match.version != null && match.version > 0) ||
+                parseStates[match.match_id] === 'parsed';
 
               return (
                 <div
@@ -141,7 +229,7 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {Boolean(match.version != null && match.version > 0) && (
+                      {isParsed && (
                         <span
                           className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30"
                           title="Partida analizada"
@@ -183,17 +271,20 @@ export const RecentMatches: React.FC<RecentMatchesProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center justify-between gap-2 pt-1">
                     <span className="text-[11px] text-slate-400 truncate font-mono">
                       {getGameModeName(match.game_mode)}
                     </span>
-                    <Link
-                      to={`/match/${match.match_id}`}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white transition shadow-md shadow-red-950/40"
-                    >
-                      <span>Analizar</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </Link>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {renderParseButton(match.match_id, isParsed)}
+                      <Link
+                        to={`/match/${match.match_id}`}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white transition shadow-md shadow-red-950/40"
+                      >
+                        <span>Analizar</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               );

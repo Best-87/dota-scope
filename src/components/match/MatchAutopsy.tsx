@@ -441,9 +441,21 @@ export const MatchAutopsy: React.FC<MatchAutopsyProps> = ({ match, focusAccountI
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
               <div className="bg-rose-950/20 border border-rose-500/30 rounded-xl p-4 space-y-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" /> Fallos Identificados</span>
-                {activeRoleEval.criticalMistakes.length === 0
-                  ? <p className="text-xs text-gray-400 italic">No se detectaron fallos críticos graves.</p>
-                  : <ul className="space-y-1.5 text-xs text-gray-300">{activeRoleEval.criticalMistakes.map((m, i) => <li key={i} className="flex items-start gap-2"><span className="text-rose-400 font-bold">•</span><span>{m}</span></li>)}</ul>}
+                {(() => {
+        const roleFindings = findings.filter(f => f.position === activeRoleEval.position);
+        return roleFindings.length === 0 ? (
+          <p className="text-xs text-gray-400 italic">No se detectaron fallos críticos graves.</p>
+        ) : (
+          <ul className="space-y-1.5 text-xs text-gray-300">
+            {roleFindings.map((f, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span className="text-rose-400 font-bold">•</span>
+                <span>{f.title}: {f.description}</span>
+              </li>
+            ))}
+          </ul>
+        );
+      })()}
               </div>
               <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-4 space-y-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> Aciertos</span>

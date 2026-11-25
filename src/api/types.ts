@@ -176,6 +176,7 @@ export interface MatchDetail {
   cluster?: number;
   first_blood_time?: number;
   replay_url?: string;
+  version?: number | null;
   picks_bans?: PickBan[];
   barracks_status_radiant?: number;
   barracks_status_dire?: number;
