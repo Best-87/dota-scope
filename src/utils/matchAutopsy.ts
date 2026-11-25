@@ -944,30 +944,97 @@ export function analyzeMatchLoss(
   // 3. TEAM-WIDE MACRO & STRUCTURAL FINDINGS (Strict real checks)
   // --------------------------------------------------------------------------
   const totalDenies = teamPlayers.reduce((acc, p) => acc + (p.denies || 0), 0);
-  if (totalDenies < 8 && durationMins > 15) {
+  const enemyDenies = enemyPlayers.reduce((acc, p) => acc + (p.denies || 0), 0);
+  if (totalDenies < 15 && durationMins > 15) {
     findings.push({
       category: 'laning',
-      severity: 'warning',
-      title: 'Líneas descontroladas (Pocos Denies en fase de líneas)',
-      description: `El equipo solo sumó ${totalDenies} denies en conjunto. Sin control de la oleada, los creeps quedaron empujados bajo torre enemiga.`,
+      severity: totalDenies < 8 ? 'danger' : 'warning',
+      title: 'Control de oleada limitado (Pocos Denies)',
+      description: `El equipo sumó ${totalDenies} denies en conjunto (vs ${enemyDenies} del rival). Sin control de creeps, las líneas quedaron expuestas.`,
     });
     recommendations.push(
       'Fase de líneas: Denegar creeps bajo el 50% de vida y hacer pulls a campamentos para mantener la oleada cerca de la propia torre.'
     );
+  } else if (totalDenies >= 25) {
+    findings.push({
+      category: 'laning',
+      severity: 'info',
+      title: 'Buen control de denies en fase de líneas',
+      description: `El equipo acumuló ${totalDenies} denies (vs ${enemyDenies} del rival), negando experiencia y oro clave en los primeros minutos.`,
+    });
+  }
+
+  // Laning 10-minute telemetry (when parsed)
+  const teamGold10 = teamPlayers.reduce((acc, p) => acc + (p.gold_t?.[10] ?? 0), 0);
+  const enemyGold10 = enemyPlayers.reduce((acc, p) => acc + (p.gold_t?.[10] ?? 0), 0);
+  if (teamGold10 > 0 && enemyGold10 > 0) {
+    const diff10 = teamGold10 - enemyGold10;
+    if (diff10 <= -2000) {
+      findings.push({
+        category: 'laning',
+        severity: 'danger',
+        title: 'Desventaja temprana al minuto 10',
+        description: `Al minuto 10 el equipo estaba ${Math.abs(diff10).toLocaleString()} de oro abajo (${teamGold10.toLocaleString()} vs ${enemyGold10.toLocaleString()}).`,
+      });
+    } else if (diff10 >= 2000) {
+      findings.push({
+        category: 'laning',
+        severity: 'info',
+        title: 'Ventaja sólida al minuto 10',
+        description: `El equipo cerró la fase de líneas con +${diff10.toLocaleString()} de oro sobre el rival (${teamGold10.toLocaleString()} vs ${enemyGold10.toLocaleString()}).`,
+      });
+    }
+  }
+
+  // Farming telemetry across cores & team
+  const teamAvgGpm = Math.round(teamPlayers.reduce((acc, p) => acc + (p.gold_per_min || 0), 0) / Math.max(1, teamPlayers.length));
+  const enemyAvgGpm = Math.round(enemyPlayers.reduce((acc, p) => acc + (p.gold_per_min || 0), 0) / Math.max(1, enemyPlayers.length));
+  if (teamAvgGpm < enemyAvgGpm - 50) {
+    findings.push({
+      category: 'farming',
+      severity: 'warning',
+      title: 'Ritmo de economía inferior al rival',
+      description: `El GPM promedio del equipo fue ${teamAvgGpm} frente a ${enemyAvgGpm} del equipo contrario (-${enemyAvgGpm - teamAvgGpm} GPM por jugador).`,
+    });
+  } else if (teamAvgGpm >= enemyAvgGpm + 50) {
+    findings.push({
+      category: 'farming',
+      severity: 'info',
+      title: 'Superioridad de farmeo y economía',
+      description: `El equipo promedió ${teamAvgGpm} GPM frente a ${enemyAvgGpm} GPM del rival (+${teamAvgGpm - enemyAvgGpm} GPM por jugador).`,
+    });
+  }
+
+  if (p2 && p2.gold_per_min < 450 && durationMins > 20) {
+    findings.push({
+      category: 'farming',
+      severity: 'warning',
+      title: 'Pos 2 (Mid) con GPM bajo para su rol',
+      description: `${p2.personaname || 'El Mid'} cerró con ${p2.gold_per_min} GPM y ${p2.last_hits} Last Hits en ${durationMins}m.`,
+      culpritHeroId: p2.hero_id,
+      position: 2,
+    });
   }
 
   const teamTowerDmg = teamPlayers.reduce((acc, p) => acc + (p.tower_damage || 0), 0);
   const enemyTowerDmg = enemyPlayers.reduce((acc, p) => acc + (p.tower_damage || 0), 0);
-  if (teamTowerDmg < 2500 && durationMins > 25) {
+  if ((teamTowerDmg < 2500 && durationMins > 25) || (teamTowerDmg < enemyTowerDmg * 0.55 && durationMins > 20)) {
     findings.push({
       category: 'objectives',
       severity: 'danger',
-      title: 'Bajo daño a estructuras (No se transformaron bajas en torres)',
-      description: `Solo se provocaron ${teamTowerDmg.toLocaleString()} de daño a torres enemigas (contra ${enemyTowerDmg.toLocaleString()} del rival). El equipo ganó peleas pero no presionó edificaciones.`,
+      title: 'Bajo daño a estructuras (Falta de presión a torres)',
+      description: `El equipo provocó ${teamTowerDmg.toLocaleString()} de daño a torres enemigas (contra ${enemyTowerDmg.toLocaleString()} del rival).`,
     });
     recommendations.push(
       'Objetivos: Cada vez que consigan 2 o más bajas clave, empujar la línea más próxima y destruir la torre antes de volver a dispersarse.'
     );
+  } else if (teamTowerDmg >= Math.max(5000, enemyTowerDmg * 1.3)) {
+    findings.push({
+      category: 'objectives',
+      severity: 'info',
+      title: 'Buena conversión de ventaja en objetivos',
+      description: `El equipo acumuló ${teamTowerDmg.toLocaleString()} de daño a estructuras (vs ${enemyTowerDmg.toLocaleString()} del rival).`,
+    });
   }
 
   // Vision Blackout Check - ONLY IF PARSED TELEMETRY EXISTS!
