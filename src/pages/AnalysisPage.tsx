@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Compass,
   Coins,
   TrendingUp,
   Trophy,
-  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { useMatches } from '../hooks/useMatches';
 import { usePlayer } from '../hooks/usePlayer';
@@ -20,8 +20,10 @@ export const AnalysisPage: React.FC = () => {
   const navigate = useNavigate();
   const accountId = routeAccountId ? Number(routeAccountId) : null;
 
-  const { matches, loading: matchesLoading } = useMatches(accountId);
-  const { rankings, loading: playerLoading } = usePlayer(accountId);
+  const [matchLimit, setMatchLimit] = useState<number>(100);
+  const matchFilters = useMemo(() => ({ limit: matchLimit }), [matchLimit]);
+  const { matches, loading: matchesLoading, refetch } = useMatches(accountId, matchFilters);
+  const { rankings } = usePlayer(accountId);
 
   const [activeTab, setActiveTab] = useState<'roles' | 'farm' | 'trends' | 'rankings'>('roles');
 
@@ -46,13 +48,44 @@ export const AnalysisPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">
-          Análisis de Rendimiento Avanzado
-        </h1>
-        <p className="text-xs text-gray-400 mt-1">
-          Desglose táctico de roles, eficiencia de oro, patrones de victoria y percentil competitivo
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">
+            Análisis de Rendimiento Avanzado
+          </h1>
+          <p className="text-xs text-gray-400 mt-1">
+            Desglose táctico de roles, eficiencia de oro, patrones de victoria y percentil competitivo ({matches.length} partidas analizadas)
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1 bg-slate-900/90 border border-slate-800 p-1 rounded-xl text-xs font-semibold">
+            {[20, 50, 100, 200].map((lim) => (
+              <button
+                key={lim}
+                type="button"
+                onClick={() => setMatchLimit(lim)}
+                className={`px-2.5 py-1 rounded-lg transition ${
+                  matchLimit === lim
+                    ? 'bg-red-600 text-white font-bold shadow-sm'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {lim}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={matchesLoading}
+            title="Actualizar partidas"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-gray-300 hover:text-white transition disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${matchesLoading ? 'animate-spin' : ''}`} />
+            <span>Actualizar</span>
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
