@@ -8,6 +8,7 @@ import OverviewCard from '../components/dashboard/OverviewCard';
 import HeroGrid from '../components/dashboard/HeroGrid';
 import RecentMatches from '../components/dashboard/RecentMatches';
 import PlayerBreakdownStats from '../components/dashboard/PlayerBreakdownStats';
+import NemesisAndPrey from '../components/dashboard/NemesisAndPrey';
 import Loading from '../components/common/Loading';
 
 export const DashboardPage: React.FC = () => {
@@ -151,6 +152,9 @@ export const DashboardPage: React.FC = () => {
 
       {/* OpenDota Breakdown Stats (Game Mode, Role, Team, Region, Lobby) */}
       <PlayerBreakdownStats counts={counts} loading={statsLoading} accountId={accountId} />
+
+      {/* Matchups: Nemesis & Prey */}
+      <NemesisAndPrey accountId={accountId} />
 
       {/* Recent Matches List with pagination */}
       <RecentMatches

@@ -255,9 +255,10 @@ export async function getMatches(
 /**
  * Fetches hero performance stats for a player.
  */
-export async function getHeroes(accountId: number): Promise<HeroStats[]> {
+export async function getHeroes(accountId: number, dateDays?: number): Promise<HeroStats[]> {
+  const qs = dateDays ? `?date=${dateDays}` : '';
   return fetchWithRetry<HeroStats[]>(
-    `${BASE_URL}/players/${accountId}/heroes`
+    `${BASE_URL}/players/${accountId}/heroes${qs}`
   );
 }
 
