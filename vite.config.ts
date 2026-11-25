@@ -1,9 +1,28 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import fs from 'fs'
+import path from 'path'
+
+function swVersionPlugin() {
+  return {
+    name: 'sw-version-plugin',
+    closeBundle() {
+      const swPath = path.resolve(__dirname, 'dist/sw.js')
+      if (fs.existsSync(swPath)) {
+        const content = fs.readFileSync(swPath, 'utf-8')
+        const updated = content.replace(
+          /const CACHE_VERSION = '[^']*';/,
+          `const CACHE_VERSION = '${Date.now()}';`
+        )
+        fs.writeFileSync(swPath, updated, 'utf-8')
+      }
+    },
+  }
+}
 
 export default defineConfig({
   base: './',
-  plugins: [react()],
+  plugins: [react(), swVersionPlugin()],
   build: {
     target: 'es2020',
     chunkSizeWarningLimit: 600,
